@@ -11,6 +11,7 @@
     "dev": "nest start --watch",
     "test": "pnpm run prisma:generate && pnpm run build && node --test test/*.test.mjs",
     "test:unit": "pnpm run build && node --test test/error-contract.test.mjs",
+    "test:helm": "helm lint deploy/helm/analytics-service && helm template analytics deploy/helm/analytics-service",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
     "prisma:generate": "prisma generate",

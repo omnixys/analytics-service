@@ -1,0 +1,65 @@
+{
+  "annotations": { "list": [] },
+  "editable": false,
+  "panels": [
+    {
+      "title": "Batch API p95 latency",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_duration_milliseconds_bucket{service_name=\"analytics\",http_route=\"/v1/analytics/batch\"}[5m])))",
+          "legendFormat": "p95"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+    },
+    {
+      "title": "Batch API request rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"analytics\",http_route=\"/v1/analytics/batch\"}[5m]))",
+          "legendFormat": "requests/s"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+    },
+    {
+      "title": "Pod readiness",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(kube_pod_status_ready{namespace=\"analytics\",condition=\"true\",pod=~\".*analytics-service.*\"})"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 8 }
+    },
+    {
+      "title": "Restart rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(kube_pod_container_status_restarts_total{namespace=\"analytics\",container=\"analytics\"}[15m]))"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 9, "x": 6, "y": 8 }
+    },
+    {
+      "title": "CPU saturation",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"analytics\",container=\"analytics\"}[5m]))"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 9, "x": 15, "y": 8 }
+    }
+  ],
+  "schemaVersion": 41,
+  "tags": ["omnixys", "analytics"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "Omnixys Analytics Platform",
+  "uid": "omnixys-analytics"
+}

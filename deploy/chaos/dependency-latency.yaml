@@ -1,0 +1,22 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: analytics-kafka-latency
+  namespace: analytics
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces: [analytics]
+    labelSelectors:
+      app.kubernetes.io/name: analytics-service
+  direction: to
+  target:
+    mode: all
+    selector:
+      namespaces: [kafka]
+  delay:
+    latency: 250ms
+    correlation: "50"
+    jitter: 50ms
+  duration: 5m

@@ -1,0 +1,56 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/omnixys/analytics-service
+  tag: ""
+  pullPolicy: IfNotPresent
+
+service:
+  port: 7410
+  metricsPort: 9470
+
+config:
+  serviceName: analytics
+  kafkaBroker: kafka:9092
+  valkeyUrl: valkey://valkey:6379
+  keycloakUrl: https://identity.example.com
+  keycloakRealm: omnixys
+  otelEndpoint: http://otel-collector:4318
+  rateLimitRequests: "12000"
+
+secrets:
+  existingSecret: analytics-service
+  databaseUrlKey: database-url
+  valkeyPasswordKey: valkey-password
+  encryptionKeyKey: encryption-key
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 384Mi
+  limits:
+    cpu: "2"
+    memory: 1536Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 12
+  targetCPUUtilizationPercentage: 65
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+serviceMonitor:
+  enabled: false
+  interval: 30s
+
+networkPolicy:
+  enabled: false
+
+podAnnotations: {}
+imagePullSecrets: []
+nodeSelector: {}
+tolerations: []
+affinity: {}
