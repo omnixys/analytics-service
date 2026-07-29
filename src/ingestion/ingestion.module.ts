@@ -10,5 +10,6 @@ import { UsageService } from "./usage.service.js";
   imports: [ApiKeyModule, CatalogModule],
   controllers: [IngestionController],
   providers: [IngestionService, QuotaService, UsageService],
+  exports: [IngestionService],
 })
 export class IngestionModule {}

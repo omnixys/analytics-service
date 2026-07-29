@@ -12,6 +12,7 @@ enum Environment {
   DEVELOPMENT
   STAGING
   PRODUCTION
+
   @@schema("analytics")
 }
 
@@ -20,6 +21,7 @@ enum Lifecycle {
   ACTIVE
   DEPRECATED
   ARCHIVED
+
   @@schema("analytics")
 }
 
@@ -28,6 +30,7 @@ enum TrackingMode {
   WARN
   QUARANTINE
   REJECT
+
   @@schema("analytics")
 }
 
@@ -38,6 +41,7 @@ enum JobStatus {
   FAILED
   CANCELED
   PAUSED
+
   @@schema("analytics")
 }
 
@@ -45,6 +49,7 @@ enum ScheduleMisfirePolicy {
   SKIP
   FIRE_ONCE
   CATCH_UP
+
   @@schema("analytics")
 }
 
@@ -52,12 +57,14 @@ enum ScheduleConcurrencyPolicy {
   ALLOW
   FORBID
   REPLACE
+
   @@schema("analytics")
 }
 
 enum QuotaScope {
   ORGANIZATION
   WORKSPACE
+
   @@schema("analytics")
 }
 
@@ -69,8 +76,9 @@ model Organization {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   workspaces Workspace[]
-  @@schema("analytics")
+
   @@map("organization")
+  @@schema("analytics")
 }
 
 model Workspace {
@@ -83,28 +91,30 @@ model Workspace {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   sources      Source[]
+
   @@unique([organizationId, slug])
   @@index([organizationId])
-  @@schema("analytics")
   @@map("workspace")
+  @@schema("analytics")
 }
 
 model Source {
-  id             String      @id @default(uuid()) @db.Uuid
-  organizationId String      @map("organization_id") @db.Uuid
-  workspaceId    String      @map("workspace_id") @db.Uuid
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
   name           String
   slug           String
-  lifecycle      Lifecycle   @default(DRAFT)
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
+  lifecycle      Lifecycle @default(DRAFT)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   apiKeys   ApiKey[]
+
   @@unique([workspaceId, slug])
   @@index([organizationId, workspaceId])
-  @@schema("analytics")
   @@map("source")
+  @@schema("analytics")
 }
 
 model Membership {
@@ -119,8 +129,8 @@ model Membership {
 
   @@unique([organizationId, workspaceId, subjectId])
   @@index([subjectId, active])
-  @@schema("analytics")
   @@map("membership")
+  @@schema("analytics")
 }
 
 model ApiKey {
@@ -139,9 +149,10 @@ model ApiKey {
   createdAt      DateTime    @default(now()) @map("created_at")
 
   source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
   @@index([organizationId, workspaceId, sourceId])
-  @@schema("analytics")
   @@map("api_key")
+  @@schema("analytics")
 }
 
 model EventDefinition {
@@ -159,44 +170,47 @@ model EventDefinition {
   updatedAt      DateTime    @updatedAt @map("updated_at")
 
   versions EventSchemaVersion[]
+
   @@unique([sourceId, environment, name])
   @@index([organizationId, workspaceId, lifecycle])
-  @@schema("analytics")
   @@map("event_definition")
+  @@schema("analytics")
 }
 
 model EventSchemaVersion {
   id                String   @id @default(uuid()) @db.Uuid
   eventDefinitionId String   @map("event_definition_id") @db.Uuid
-  version            String
-  schema             Json
-  examples           Json?
-  privacy            Json?
-  createdBy          String   @map("created_by")
-  createdAt          DateTime @default(now()) @map("created_at")
+  version           String
+  schema            Json
+  examples          Json?
+  privacy           Json?
+  createdBy         String   @map("created_by")
+  createdAt         DateTime @default(now()) @map("created_at")
 
   eventDefinition EventDefinition @relation(fields: [eventDefinitionId], references: [id], onDelete: Cascade)
+
   @@unique([eventDefinitionId, version])
-  @@schema("analytics")
   @@map("event_schema_version")
+  @@schema("analytics")
 }
 
 model TrackingPlan {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String       @map("organization_id") @db.Uuid
-  workspaceId    String       @map("workspace_id") @db.Uuid
-  sourceId       String       @map("source_id") @db.Uuid
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  workspaceId    String      @map("workspace_id") @db.Uuid
+  sourceId       String      @map("source_id") @db.Uuid
   environment    Environment
-  lifecycle      Lifecycle    @default(DRAFT)
-  activeVersion  Int?         @map("active_version")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  lifecycle      Lifecycle   @default(DRAFT)
+  activeVersion  Int?        @map("active_version")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
 
   versions TrackingPlanVersion[]
+
   @@unique([sourceId, environment])
   @@index([organizationId, workspaceId])
-  @@schema("analytics")
   @@map("tracking_plan")
+  @@schema("analytics")
 }
 
 model TrackingPlanVersion {
@@ -209,9 +223,10 @@ model TrackingPlanVersion {
   createdAt      DateTime     @default(now()) @map("created_at")
 
   trackingPlan TrackingPlan @relation(fields: [trackingPlanId], references: [id], onDelete: Cascade)
+
   @@unique([trackingPlanId, version])
-  @@schema("analytics")
   @@map("tracking_plan_version")
+  @@schema("analytics")
 }
 
 model RawEvent {
@@ -244,8 +259,8 @@ model RawEvent {
   @@index([sourceId, environment, name, occurredAt])
   @@index([userId, occurredAt])
   @@index([sessionId, occurredAt])
-  @@schema("analytics")
   @@map("raw_event")
+  @@schema("analytics")
 }
 
 model QuarantinedEvent {
@@ -262,8 +277,28 @@ model QuarantinedEvent {
 
   @@index([organizationId, workspaceId, createdAt])
   @@index([sourceId, environment, eventId])
-  @@schema("analytics")
   @@map("quarantined_event")
+  @@schema("analytics")
+}
+
+model DomainEventQuarantine {
+  id             String       @id @default(uuid()) @db.Uuid
+  eventId        String?      @map("event_id")
+  topic          String
+  eventVersion   String?      @map("event_version")
+  producer       String?
+  tenantId       String?      @map("tenant_id")
+  environment    Environment?
+  reasonCode     String       @map("reason_code")
+  reason         String
+  payloadSummary Json         @map("payload_summary")
+  correlationId  String?      @map("correlation_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([topic, createdAt])
+  @@index([tenantId, createdAt])
+  @@map("domain_event_quarantine")
+  @@schema("analytics")
 }
 
 model Identity {
@@ -278,8 +313,8 @@ model Identity {
 
   @@unique([workspaceId, canonicalId])
   @@index([organizationId, workspaceId])
-  @@schema("analytics")
   @@map("identity")
+  @@schema("analytics")
 }
 
 model IdentityAlias {
@@ -292,8 +327,8 @@ model IdentityAlias {
 
   @@unique([workspaceId, previousId])
   @@index([workspaceId, canonicalId])
-  @@schema("analytics")
   @@map("identity_alias")
+  @@schema("analytics")
 }
 
 model Session {
@@ -311,8 +346,8 @@ model Session {
 
   @@index([organizationId, workspaceId, startedAt])
   @@index([userId, startedAt])
-  @@schema("analytics")
   @@map("session")
+  @@schema("analytics")
 }
 
 model MetricDefinition {
@@ -327,10 +362,11 @@ model MetricDefinition {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   versions MetricVersion[]
+
   @@unique([workspaceId, key])
   @@index([organizationId, workspaceId, lifecycle])
-  @@schema("analytics")
   @@map("metric_definition")
+  @@schema("analytics")
 }
 
 model MetricVersion {
@@ -343,9 +379,10 @@ model MetricVersion {
   createdAt          DateTime @default(now()) @map("created_at")
 
   metricDefinition MetricDefinition @relation(fields: [metricDefinitionId], references: [id], onDelete: Cascade)
+
   @@unique([metricDefinitionId, version])
-  @@schema("analytics")
   @@map("metric_version")
+  @@schema("analytics")
 }
 
 model AggregateBucket {
@@ -370,10 +407,11 @@ model AggregateBucket {
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   distinctValues AggregateDistinctValue[]
+
   @@unique([metricVersionId, bucketStart, bucketSize, dimensionKey])
   @@index([organizationId, workspaceId, bucketStart])
-  @@schema("analytics")
   @@map("aggregate_bucket")
+  @@schema("analytics")
 }
 
 model AggregateDistinctValue {
@@ -383,9 +421,10 @@ model AggregateDistinctValue {
   createdAt         DateTime @default(now()) @map("created_at")
 
   aggregateBucket AggregateBucket @relation(fields: [aggregateBucketId], references: [id], onDelete: Cascade)
+
   @@unique([aggregateBucketId, valueHash])
-  @@schema("analytics")
   @@map("aggregate_distinct_value")
+  @@schema("analytics")
 }
 
 model KpiDefinition {
@@ -400,10 +439,11 @@ model KpiDefinition {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   versions KpiVersion[]
+
   @@unique([workspaceId, key])
   @@index([organizationId, workspaceId, lifecycle])
-  @@schema("analytics")
   @@map("kpi_definition")
+  @@schema("analytics")
 }
 
 model KpiVersion {
@@ -418,9 +458,10 @@ model KpiVersion {
   createdAt         DateTime @default(now()) @map("created_at")
 
   kpiDefinition KpiDefinition @relation(fields: [kpiDefinitionId], references: [id], onDelete: Cascade)
+
   @@unique([kpiDefinitionId, version])
-  @@schema("analytics")
   @@map("kpi_version")
+  @@schema("analytics")
 }
 
 model MaterializedViewState {
@@ -434,8 +475,8 @@ model MaterializedViewState {
   rowCount          BigInt   @default(0) @map("row_count")
 
   @@unique([workspaceId, viewKey])
-  @@schema("analytics")
   @@map("materialized_view_state")
+  @@schema("analytics")
 }
 
 model SavedSearch {
@@ -452,8 +493,8 @@ model SavedSearch {
 
   @@unique([workspaceId, resourceType, name])
   @@index([organizationId, workspaceId, resourceType, lifecycle])
-  @@schema("analytics")
   @@map("saved_search")
+  @@schema("analytics")
 }
 
 model DataAsset {
@@ -466,9 +507,10 @@ model DataAsset {
   createdAt      DateTime  @default(now()) @map("created_at")
 
   versions DataAssetVersion[]
+
   @@unique([workspaceId, type, key])
-  @@schema("analytics")
   @@map("data_asset")
+  @@schema("analytics")
 }
 
 model DataAssetVersion {
@@ -478,27 +520,28 @@ model DataAssetVersion {
   definition  Json
   createdAt   DateTime @default(now()) @map("created_at")
 
-  dataAsset DataAsset @relation(fields: [dataAssetId], references: [id], onDelete: Cascade)
-  runInputs LineageRunInput[]
+  dataAsset  DataAsset          @relation(fields: [dataAssetId], references: [id], onDelete: Cascade)
+  runInputs  LineageRunInput[]
   runOutputs LineageRunOutput[]
+
   @@unique([dataAssetId, version])
-  @@schema("analytics")
   @@map("data_asset_version")
+  @@schema("analytics")
 }
 
 model LineageEdge {
-  id            String   @id @default(uuid()) @db.Uuid
-  organizationId String  @map("organization_id") @db.Uuid
-  workspaceId   String   @map("workspace_id") @db.Uuid
-  inputVersionId String  @map("input_version_id") @db.Uuid
-  outputVersionId String @map("output_version_id") @db.Uuid
-  transformationId String? @map("transformation_id") @db.Uuid
-  createdAt     DateTime @default(now()) @map("created_at")
+  id               String   @id @default(uuid()) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  workspaceId      String   @map("workspace_id") @db.Uuid
+  inputVersionId   String   @map("input_version_id") @db.Uuid
+  outputVersionId  String   @map("output_version_id") @db.Uuid
+  transformationId String?  @map("transformation_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at")
 
   @@unique([inputVersionId, outputVersionId, transformationId])
   @@index([organizationId, workspaceId])
-  @@schema("analytics")
   @@map("lineage_edge")
+  @@schema("analytics")
 }
 
 model ProcessingRun {
@@ -518,8 +561,8 @@ model ProcessingRun {
   createdAt         DateTime  @default(now()) @map("created_at")
 
   @@index([organizationId, workspaceId, createdAt])
-  @@schema("analytics")
   @@map("processing_run")
+  @@schema("analytics")
 }
 
 model LineageRun {
@@ -539,39 +582,42 @@ model LineageRun {
   startedAt         DateTime  @default(now()) @map("started_at")
   completedAt       DateTime? @map("completed_at")
 
-  inputs LineageRunInput[]
+  inputs  LineageRunInput[]
   outputs LineageRunOutput[]
+
   @@unique([workspaceId, runKey])
   @@index([organizationId, workspaceId, watermark])
-  @@schema("analytics")
   @@map("lineage_run")
+  @@schema("analytics")
 }
 
 model LineageRunInput {
-  id             String   @id @default(uuid()) @db.Uuid
-  lineageRunId   String   @map("lineage_run_id") @db.Uuid
-  assetVersionId String   @map("asset_version_id") @db.Uuid
-  recordCount    BigInt   @default(0) @map("record_count")
-  discardedCount BigInt  @default(0) @map("discarded_count")
+  id             String @id @default(uuid()) @db.Uuid
+  lineageRunId   String @map("lineage_run_id") @db.Uuid
+  assetVersionId String @map("asset_version_id") @db.Uuid
+  recordCount    BigInt @default(0) @map("record_count")
+  discardedCount BigInt @default(0) @map("discarded_count")
 
-  lineageRun LineageRun @relation(fields: [lineageRunId], references: [id], onDelete: Cascade)
+  lineageRun   LineageRun       @relation(fields: [lineageRunId], references: [id], onDelete: Cascade)
   assetVersion DataAssetVersion @relation(fields: [assetVersionId], references: [id], onDelete: Restrict)
+
   @@unique([lineageRunId, assetVersionId])
-  @@schema("analytics")
   @@map("lineage_run_input")
+  @@schema("analytics")
 }
 
 model LineageRunOutput {
-  id             String   @id @default(uuid()) @db.Uuid
-  lineageRunId   String   @map("lineage_run_id") @db.Uuid
-  assetVersionId String   @map("asset_version_id") @db.Uuid
-  recordCount    BigInt   @default(0) @map("record_count")
+  id             String @id @default(uuid()) @db.Uuid
+  lineageRunId   String @map("lineage_run_id") @db.Uuid
+  assetVersionId String @map("asset_version_id") @db.Uuid
+  recordCount    BigInt @default(0) @map("record_count")
 
-  lineageRun LineageRun @relation(fields: [lineageRunId], references: [id], onDelete: Cascade)
+  lineageRun   LineageRun       @relation(fields: [lineageRunId], references: [id], onDelete: Cascade)
   assetVersion DataAssetVersion @relation(fields: [assetVersionId], references: [id], onDelete: Restrict)
+
   @@unique([lineageRunId, assetVersionId])
-  @@schema("analytics")
   @@map("lineage_run_output")
+  @@schema("analytics")
 }
 
 model RuleSet {
@@ -585,9 +631,10 @@ model RuleSet {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   versions RuleVersion[]
+
   @@index([organizationId, workspaceId, lifecycle])
-  @@schema("analytics")
   @@map("rule_set")
+  @@schema("analytics")
 }
 
 model RuleVersion {
@@ -604,31 +651,32 @@ model RuleVersion {
   createdAt         DateTime @default(now()) @map("created_at")
 
   ruleSet RuleSet @relation(fields: [ruleSetId], references: [id], onDelete: Cascade)
+
   @@unique([ruleSetId, version])
-  @@schema("analytics")
   @@map("rule_version")
+  @@schema("analytics")
 }
 
 model RuleExecution {
-  id               String    @id @default(uuid()) @db.Uuid
-  organizationId   String    @map("organization_id") @db.Uuid
-  workspaceId      String    @map("workspace_id") @db.Uuid
-  ruleSetId        String    @map("rule_set_id") @db.Uuid
-  ruleVersion      Int       @map("rule_version")
-  eventId          String    @map("event_id") @db.Uuid
-  idempotencyKey   String    @unique @map("idempotency_key")
-  status           JobStatus @default(RUNNING)
-  matched          Boolean   @default(false)
-  causationDepth   Int       @default(0) @map("causation_depth")
-  actionResults    Json?     @map("action_results")
-  error            String?
-  startedAt        DateTime  @default(now()) @map("started_at")
-  completedAt      DateTime? @map("completed_at")
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  ruleSetId      String    @map("rule_set_id") @db.Uuid
+  ruleVersion    Int       @map("rule_version")
+  eventId        String    @map("event_id") @db.Uuid
+  idempotencyKey String    @unique @map("idempotency_key")
+  status         JobStatus @default(RUNNING)
+  matched        Boolean   @default(false)
+  causationDepth Int       @default(0) @map("causation_depth")
+  actionResults  Json?     @map("action_results")
+  error          String?
+  startedAt      DateTime  @default(now()) @map("started_at")
+  completedAt    DateTime? @map("completed_at")
 
   @@index([organizationId, workspaceId, startedAt])
   @@index([ruleSetId, eventId])
-  @@schema("analytics")
   @@map("rule_execution")
+  @@schema("analytics")
 }
 
 model Audience {
@@ -642,9 +690,10 @@ model Audience {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   members AudienceMember[]
+
   @@index([organizationId, workspaceId, lifecycle])
-  @@schema("analytics")
   @@map("audience")
+  @@schema("analytics")
 }
 
 model AudienceMember {
@@ -658,42 +707,43 @@ model AudienceMember {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   audience Audience @relation(fields: [audienceId], references: [id], onDelete: Cascade)
+
   @@unique([audienceId, subjectId])
   @@index([organizationId, workspaceId, subjectId])
-  @@schema("analytics")
   @@map("audience_member")
+  @@schema("analytics")
 }
 
 model AlertRule {
-  id             String    @id @default(uuid()) @db.Uuid
-  organizationId String    @map("organization_id") @db.Uuid
-  workspaceId    String    @map("workspace_id") @db.Uuid
-  name           String
-  lifecycle      Lifecycle @default(DRAFT)
-  condition      Json
-  cooldownSeconds Int      @default(900) @map("cooldown_seconds")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  workspaceId     String    @map("workspace_id") @db.Uuid
+  name            String
+  lifecycle       Lifecycle @default(DRAFT)
+  condition       Json
+  cooldownSeconds Int       @default(900) @map("cooldown_seconds")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@index([organizationId, workspaceId, lifecycle])
-  @@schema("analytics")
   @@map("alert_rule")
+  @@schema("analytics")
 }
 
 model AlertIncident {
-  id             String   @id @default(uuid()) @db.Uuid
-  organizationId String   @map("organization_id") @db.Uuid
-  workspaceId    String   @map("workspace_id") @db.Uuid
-  alertRuleId    String   @map("alert_rule_id") @db.Uuid
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  alertRuleId    String    @map("alert_rule_id") @db.Uuid
   status         String
   dimensions     Json
-  openedAt       DateTime @default(now()) @map("opened_at")
+  openedAt       DateTime  @default(now()) @map("opened_at")
   acknowledgedAt DateTime? @map("acknowledged_at")
   resolvedAt     DateTime? @map("resolved_at")
 
   @@index([organizationId, workspaceId, status, openedAt])
-  @@schema("analytics")
   @@map("alert_incident")
+  @@schema("analytics")
 }
 
 model PluginDefinition {
@@ -707,8 +757,8 @@ model PluginDefinition {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@index([organizationId, workspaceId, lifecycle])
-  @@schema("analytics")
   @@map("plugin_definition")
+  @@schema("analytics")
 }
 
 model WebhookEndpoint {
@@ -722,8 +772,8 @@ model WebhookEndpoint {
   createdAt      DateTime @default(now()) @map("created_at")
 
   @@index([organizationId, workspaceId, active])
-  @@schema("analytics")
   @@map("webhook_endpoint")
+  @@schema("analytics")
 }
 
 model Schedule {
@@ -747,32 +797,34 @@ model Schedule {
   updatedAt         DateTime                  @updatedAt @map("updated_at")
 
   runs ScheduleRun[]
+
   @@index([active, nextRunAt])
   @@index([organizationId, workspaceId])
-  @@schema("analytics")
   @@map("schedule")
+  @@schema("analytics")
 }
 
 model ScheduleRun {
-  id           String    @id @default(uuid()) @db.Uuid
-  scheduleId   String    @map("schedule_id") @db.Uuid
-  scheduledFor DateTime  @map("scheduled_for")
-  status       JobStatus @default(PENDING)
-  attempt      Int       @default(0)
-  error        String?
-  claimedBy    String?   @map("claimed_by")
-  claimedAt    DateTime? @map("claimed_at")
-  nextRetryAt  DateTime? @map("next_retry_at")
-  idempotencyKey String  @unique @map("idempotency_key")
-  startedAt    DateTime? @map("started_at")
-  completedAt  DateTime? @map("completed_at")
-  createdAt    DateTime  @default(now()) @map("created_at")
+  id             String    @id @default(uuid()) @db.Uuid
+  scheduleId     String    @map("schedule_id") @db.Uuid
+  scheduledFor   DateTime  @map("scheduled_for")
+  status         JobStatus @default(PENDING)
+  attempt        Int       @default(0)
+  error          String?
+  claimedBy      String?   @map("claimed_by")
+  claimedAt      DateTime? @map("claimed_at")
+  nextRetryAt    DateTime? @map("next_retry_at")
+  idempotencyKey String    @unique @map("idempotency_key")
+  startedAt      DateTime? @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
 
   schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
   @@unique([scheduleId, scheduledFor])
   @@index([status, nextRetryAt])
-  @@schema("analytics")
   @@map("schedule_run")
+  @@schema("analytics")
 }
 
 model UsageRecord {
@@ -786,8 +838,8 @@ model UsageRecord {
   createdAt      DateTime @default(now()) @map("created_at")
 
   @@index([organizationId, workspaceId, meter, occurredAt])
-  @@schema("analytics")
   @@map("usage_record")
+  @@schema("analytics")
 }
 
 model UsageBucket {
@@ -802,8 +854,8 @@ model UsageBucket {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@unique([organizationId, workspaceId, meter, bucketStart, bucketSize])
-  @@schema("analytics")
   @@map("usage_bucket")
+  @@schema("analytics")
 }
 
 model QuotaDefinition {
@@ -815,8 +867,9 @@ model QuotaDefinition {
   createdAt   DateTime @default(now()) @map("created_at")
 
   assignments QuotaAssignment[]
-  @@schema("analytics")
+
   @@map("quota_definition")
+  @@schema("analytics")
 }
 
 model QuotaAssignment {
@@ -832,10 +885,11 @@ model QuotaAssignment {
   updatedAt         DateTime   @updatedAt @map("updated_at")
 
   quotaDefinition QuotaDefinition @relation(fields: [quotaDefinitionId], references: [id], onDelete: Cascade)
+
   @@unique([quotaDefinitionId, organizationId, workspaceId])
   @@index([organizationId, workspaceId])
-  @@schema("analytics")
   @@map("quota_assignment")
+  @@schema("analytics")
 }
 
 model QuotaViolation {
@@ -849,29 +903,29 @@ model QuotaViolation {
   occurredAt        DateTime @default(now()) @map("occurred_at")
 
   @@index([organizationId, workspaceId, occurredAt])
-  @@schema("analytics")
   @@map("quota_violation")
+  @@schema("analytics")
 }
 
 model ImportJob {
-  id             String    @id @default(uuid()) @db.Uuid
-  organizationId String    @map("organization_id") @db.Uuid
-  workspaceId    String    @map("workspace_id") @db.Uuid
-  sourceId       String    @map("source_id") @db.Uuid
-  status         JobStatus @default(PENDING)
-  format         String
-  objectKey      String    @map("object_key")
-  mapping        Json
-  dryRun         Boolean   @default(true) @map("dry_run")
-  suppressActions Boolean  @default(true) @map("suppress_actions")
-  issueCount     Int       @default(0) @map("issue_count")
-  createdBy      String    @map("created_by")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  completedAt    DateTime? @map("completed_at")
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  workspaceId     String    @map("workspace_id") @db.Uuid
+  sourceId        String    @map("source_id") @db.Uuid
+  status          JobStatus @default(PENDING)
+  format          String
+  objectKey       String    @map("object_key")
+  mapping         Json
+  dryRun          Boolean   @default(true) @map("dry_run")
+  suppressActions Boolean   @default(true) @map("suppress_actions")
+  issueCount      Int       @default(0) @map("issue_count")
+  createdBy       String    @map("created_by")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  completedAt     DateTime? @map("completed_at")
 
   @@index([organizationId, workspaceId, createdAt])
-  @@schema("analytics")
   @@map("import_job")
+  @@schema("analytics")
 }
 
 model ExportJob {
@@ -889,8 +943,8 @@ model ExportJob {
   completedAt    DateTime? @map("completed_at")
 
   @@index([organizationId, workspaceId, createdAt])
-  @@schema("analytics")
   @@map("export_job")
+  @@schema("analytics")
 }
 
 model ReplayJob {
@@ -908,9 +962,10 @@ model ReplayJob {
   completedAt    DateTime? @map("completed_at")
 
   items ReplayItem[]
+
   @@index([organizationId, workspaceId, createdAt])
-  @@schema("analytics")
   @@map("replay_job")
+  @@schema("analytics")
 }
 
 model ReplayItem {
@@ -927,32 +982,33 @@ model ReplayItem {
   createdAt      DateTime  @default(now()) @map("created_at")
 
   replayJob ReplayJob @relation(fields: [replayJobId], references: [id], onDelete: Cascade)
+
   @@unique([replayJobId, eventId, occurredAt])
   @@index([organizationId, workspaceId, status])
-  @@schema("analytics")
   @@map("replay_item")
+  @@schema("analytics")
 }
 
 model DeadLetterReference {
-  id             String   @id @default(uuid()) @db.Uuid
-  organizationId String?  @map("organization_id") @db.Uuid
-  workspaceId    String?  @map("workspace_id") @db.Uuid
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String?   @map("organization_id") @db.Uuid
+  workspaceId    String?   @map("workspace_id") @db.Uuid
   topic          String
   partition      Int
   offset         String
-  eventId        String?  @map("event_id")
-  errorCode      String?  @map("error_code")
-  errorMessage   String   @map("error_message")
+  eventId        String?   @map("event_id")
+  errorCode      String?   @map("error_code")
+  errorMessage   String    @map("error_message")
   headers        Json?
   payload        Json?
-  retryCount     Int      @default(0) @map("retry_count")
-  firstFailedAt  DateTime @default(now()) @map("first_failed_at")
+  retryCount     Int       @default(0) @map("retry_count")
+  firstFailedAt  DateTime  @default(now()) @map("first_failed_at")
   resolvedAt     DateTime? @map("resolved_at")
 
   @@unique([topic, partition, offset])
   @@index([organizationId, workspaceId, firstFailedAt])
-  @@schema("analytics")
   @@map("dead_letter_reference")
+  @@schema("analytics")
 }
 
 model Dashboard {
@@ -966,8 +1022,8 @@ model Dashboard {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@index([organizationId, workspaceId, lifecycle])
-  @@schema("analytics")
   @@map("dashboard")
+  @@schema("analytics")
 }
 
 model Report {
@@ -981,8 +1037,8 @@ model Report {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@index([organizationId, workspaceId, lifecycle])
-  @@schema("analytics")
   @@map("report")
+  @@schema("analytics")
 }
 
 model FeatureFlag {
@@ -997,24 +1053,26 @@ model FeatureFlag {
 
   versions  FeatureFlagVersion[]
   exposures FeatureFlagExposure[]
+
   @@unique([workspaceId, key])
   @@index([organizationId, workspaceId, lifecycle])
-  @@schema("analytics")
   @@map("feature_flag")
+  @@schema("analytics")
 }
 
 model FeatureFlagVersion {
-  id          String   @id @default(uuid()) @db.Uuid
-  flagId      String   @map("flag_id") @db.Uuid
-  version     Int
-  definition  Json
-  createdBy   String   @map("created_by")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id         String   @id @default(uuid()) @db.Uuid
+  flagId     String   @map("flag_id") @db.Uuid
+  version    Int
+  definition Json
+  createdBy  String   @map("created_by")
+  createdAt  DateTime @default(now()) @map("created_at")
 
   flag FeatureFlag @relation(fields: [flagId], references: [id], onDelete: Cascade)
+
   @@unique([flagId, version])
-  @@schema("analytics")
   @@map("feature_flag_version")
+  @@schema("analytics")
 }
 
 model FeatureFlagExposure {
@@ -1032,11 +1090,12 @@ model FeatureFlagExposure {
   occurredAt     DateTime @default(now()) @map("occurred_at")
 
   flag FeatureFlag @relation(fields: [flagId], references: [id], onDelete: Cascade)
+
   @@unique([evaluationId, flagId])
   @@index([organizationId, workspaceId, flagId, occurredAt])
   @@index([subjectId, occurredAt])
-  @@schema("analytics")
   @@map("feature_flag_exposure")
+  @@schema("analytics")
 }
 
 model Experiment {
@@ -1052,8 +1111,8 @@ model Experiment {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@unique([workspaceId, key])
-  @@schema("analytics")
   @@map("experiment")
+  @@schema("analytics")
 }
 
 model AuditEntry {
@@ -1074,6 +1133,6 @@ model AuditEntry {
   @@index([organizationId, workspaceId, occurredAt])
   @@index([actorId, occurredAt])
   @@index([resourceType, resourceId])
-  @@schema("analytics")
   @@map("audit_entry")
+  @@schema("analytics")
 }

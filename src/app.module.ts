@@ -22,6 +22,7 @@ import { SearchModule } from "./search/search.module.js";
 import { SchedulerModule } from "./scheduler/scheduler.module.js";
 import { FeatureFlagModule } from "./feature-flags/feature-flag.module.js";
 import { RuleModule } from "./rules/rule.module.js";
+import { DomainEventIngestionModule } from "./domain-ingestion/domain-event-ingestion.module.js";
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { RuleModule } from "./rules/rule.module.js";
     SchedulerModule,
     FeatureFlagModule,
     RuleModule,
+    DomainEventIngestionModule,
     HealthModule,
   ],
   providers: [PlatformResolver],

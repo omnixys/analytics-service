@@ -109,6 +109,42 @@ export class IngestionService {
     };
   }
 
+  async ingestCanonical(
+    principal: IngestionPrincipal,
+    event: AnalyticsEvent,
+  ): Promise<"accepted" | "quarantined" | "rejected"> {
+    await this.quotas.assertCanIngest(principal, 1);
+    const decision = await this.dataQuality.validate(
+      principal.sourceId,
+      principal.environment,
+      event,
+      0,
+    );
+    if (decision.disposition === "reject") {
+      await this.usage.record(principal, "events.rejected", 1);
+      return "rejected";
+    }
+    const payload = processingEvent(principal, event);
+    if (decision.disposition === "quarantine") {
+      await this.quarantine(principal, payload, decision.issues);
+      await this.usage.record(principal, "events.quarantined", 1);
+      return "quarantined";
+    }
+    await this.kafka.send({
+      topic: KafkaTopics.analytics.eventsIngested,
+      payload,
+      key: principal.workspaceId,
+      eventId: event.eventId,
+      meta: {
+        type: "EVENT",
+        service: "analytics",
+        tenantId: principal.organizationId,
+      },
+    });
+    await this.usage.record(principal, "events.accepted", 1);
+    return "accepted";
+  }
+
   private async quarantine(
     principal: IngestionPrincipal,
     payload: AnalyticsProcessingEvent,
