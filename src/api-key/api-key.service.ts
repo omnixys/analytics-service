@@ -3,6 +3,7 @@ import { ErrorCode, FrameworkException } from "@omnixys/contracts";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../prisma/prisma.service.js";
 import type { ApiKey, Environment } from "../prisma/generated/client.js";
+import { BrowserTokenService } from "../browser-token/browser-token.service.js";
 
 export type IngestionPrincipal = Pick<
   ApiKey,
@@ -11,10 +12,30 @@ export type IngestionPrincipal = Pick<
 
 @Injectable()
 export class ApiKeyService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly browserTokens: BrowserTokenService,
+  ) {}
 
-  async authenticate(authorization: string | undefined): Promise<IngestionPrincipal> {
+  async authenticate(
+    authorization: string | undefined,
+    constraints?: { origin?: string; eventNames?: readonly string[] },
+  ): Promise<IngestionPrincipal> {
     const rawKey = bearerToken(authorization);
+    if (rawKey.split(".").length === 3) {
+      try {
+        return this.browserTokens.verify(
+          rawKey,
+          constraints?.origin,
+          constraints?.eventNames ?? [],
+        );
+      } catch {
+        throw new FrameworkException(
+          ErrorCode.ANALYTICS_API_KEY_INVALID,
+          "Invalid analytics browser token",
+        );
+      }
+    }
     const prefix = rawKey.split(".", 1)[0];
     if (!prefix || !rawKey.includes(".")) {
       throw new FrameworkException(

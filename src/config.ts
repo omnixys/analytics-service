@@ -26,6 +26,14 @@ export const env = {
     "ENCRYPTION_KEY",
     "development-only-analytics-encryption-key",
   ),
+  BROWSER_TOKEN_SECRET: required(
+    "ANALYTICS_BROWSER_TOKEN_SECRET",
+    "development-only-analytics-browser-token-secret",
+  ),
+  INTERNAL_GATEWAY_TOKEN: required(
+    "INTERNAL_GATEWAY_TOKEN",
+    "dev-internal-gateway-token",
+  ),
   OTEL_ENDPOINT:
     process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? "http://localhost:4318",
   SCHEMA_TARGET: process.env.SCHEMA_TARGET ?? "tmp",

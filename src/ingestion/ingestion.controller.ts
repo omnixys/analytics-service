@@ -17,8 +17,9 @@ export class IngestionController {
   @HttpCode(HttpStatus.ACCEPTED)
   ingestBatch(
     @Headers("authorization") authorization: string | undefined,
+    @Headers("origin") origin: string | undefined,
     @Body() body: unknown,
   ): Promise<AnalyticsBatchResponse> {
-    return this.ingestion.ingest(authorization, body);
+    return this.ingestion.ingest(authorization, body, origin);
   }
 }

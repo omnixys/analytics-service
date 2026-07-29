@@ -37,9 +37,19 @@ export class IngestionService {
   async ingest(
     authorization: string | undefined,
     body: unknown,
+    origin?: string,
   ): Promise<AnalyticsBatchResponse> {
-    const principal = await this.apiKeys.authenticate(authorization);
     const batch = batchEnvelope(body);
+    const principal = await this.apiKeys.authenticate(authorization, {
+      origin,
+      eventNames: batch.events
+        .map((event) =>
+          event && typeof event === "object"
+            ? (event as Record<string, unknown>).name
+            : undefined,
+        )
+        .filter((name): name is string => typeof name === "string"),
+    });
     await this.quotas.assertCanIngest(principal, batch.events.length);
     const accepted: KafkaEventType<typeof KafkaTopics.analytics.eventsIngested>[] = [];
     const issues: AnalyticsBatchIssue[] = [];

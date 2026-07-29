@@ -23,6 +23,7 @@ import { SchedulerModule } from "./scheduler/scheduler.module.js";
 import { FeatureFlagModule } from "./feature-flags/feature-flag.module.js";
 import { RuleModule } from "./rules/rule.module.js";
 import { DomainEventIngestionModule } from "./domain-ingestion/domain-event-ingestion.module.js";
+import { BrowserTokenModule } from "./browser-token/browser-token.module.js";
 
 @Module({
   imports: [
@@ -88,6 +89,7 @@ import { DomainEventIngestionModule } from "./domain-ingestion/domain-event-inge
     FeatureFlagModule,
     RuleModule,
     DomainEventIngestionModule,
+    BrowserTokenModule,
     HealthModule,
   ],
   providers: [PlatformResolver],
