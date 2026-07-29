@@ -1,0 +1,6 @@
+.env
+dist/
+node_modules/
+src/prisma/generated/
+*.tsbuildinfo
+log/

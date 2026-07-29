@@ -1,0 +1,790 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["analytics"]
+}
+
+enum Environment {
+  DEVELOPMENT
+  STAGING
+  PRODUCTION
+  @@schema("analytics")
+}
+
+enum Lifecycle {
+  DRAFT
+  ACTIVE
+  DEPRECATED
+  ARCHIVED
+  @@schema("analytics")
+}
+
+enum TrackingMode {
+  MONITOR
+  WARN
+  QUARANTINE
+  REJECT
+  @@schema("analytics")
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELED
+  PAUSED
+  @@schema("analytics")
+}
+
+enum ScheduleMisfirePolicy {
+  SKIP
+  FIRE_ONCE
+  CATCH_UP
+  @@schema("analytics")
+}
+
+enum ScheduleConcurrencyPolicy {
+  ALLOW
+  FORBID
+  REPLACE
+  @@schema("analytics")
+}
+
+enum QuotaScope {
+  ORGANIZATION
+  WORKSPACE
+  @@schema("analytics")
+}
+
+model Organization {
+  id        String   @id @db.Uuid
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  workspaces Workspace[]
+  @@schema("analytics")
+  @@map("organization")
+}
+
+model Workspace {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  name           String
+  slug           String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sources      Source[]
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@schema("analytics")
+  @@map("workspace")
+}
+
+model Source {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  workspaceId    String      @map("workspace_id") @db.Uuid
+  name           String
+  slug           String
+  lifecycle      Lifecycle   @default(DRAFT)
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  apiKeys   ApiKey[]
+  @@unique([workspaceId, slug])
+  @@index([organizationId, workspaceId])
+  @@schema("analytics")
+  @@map("source")
+}
+
+model Membership {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String?  @map("workspace_id") @db.Uuid
+  subjectId      String   @map("subject_id")
+  role           String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, workspaceId, subjectId])
+  @@index([subjectId, active])
+  @@schema("analytics")
+  @@map("membership")
+}
+
+model ApiKey {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  workspaceId    String      @map("workspace_id") @db.Uuid
+  sourceId       String      @map("source_id") @db.Uuid
+  environment    Environment
+  name           String
+  prefix         String      @unique
+  secretHash     String      @map("secret_hash")
+  scopes         String[]    @default([])
+  expiresAt      DateTime?   @map("expires_at")
+  revokedAt      DateTime?   @map("revoked_at")
+  lastUsedAt     DateTime?   @map("last_used_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  @@index([organizationId, workspaceId, sourceId])
+  @@schema("analytics")
+  @@map("api_key")
+}
+
+model EventDefinition {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  workspaceId    String      @map("workspace_id") @db.Uuid
+  sourceId       String      @map("source_id") @db.Uuid
+  environment    Environment
+  name           String
+  description    String?
+  owner          String
+  lifecycle      Lifecycle   @default(DRAFT)
+  replacementId  String?     @map("replacement_id") @db.Uuid
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  versions EventSchemaVersion[]
+  @@unique([sourceId, environment, name])
+  @@index([organizationId, workspaceId, lifecycle])
+  @@schema("analytics")
+  @@map("event_definition")
+}
+
+model EventSchemaVersion {
+  id                String   @id @default(uuid()) @db.Uuid
+  eventDefinitionId String   @map("event_definition_id") @db.Uuid
+  version            String
+  schema             Json
+  examples           Json?
+  privacy            Json?
+  createdBy          String   @map("created_by")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  eventDefinition EventDefinition @relation(fields: [eventDefinitionId], references: [id], onDelete: Cascade)
+  @@unique([eventDefinitionId, version])
+  @@schema("analytics")
+  @@map("event_schema_version")
+}
+
+model TrackingPlan {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  workspaceId    String       @map("workspace_id") @db.Uuid
+  sourceId       String       @map("source_id") @db.Uuid
+  environment    Environment
+  lifecycle      Lifecycle    @default(DRAFT)
+  activeVersion  Int?         @map("active_version")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  versions TrackingPlanVersion[]
+  @@unique([sourceId, environment])
+  @@index([organizationId, workspaceId])
+  @@schema("analytics")
+  @@map("tracking_plan")
+}
+
+model TrackingPlanVersion {
+  id             String       @id @default(uuid()) @db.Uuid
+  trackingPlanId String       @map("tracking_plan_id") @db.Uuid
+  version        Int
+  mode           TrackingMode
+  definitionIds  String[]     @map("definition_ids") @db.Uuid
+  createdBy      String       @map("created_by")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  trackingPlan TrackingPlan @relation(fields: [trackingPlanId], references: [id], onDelete: Cascade)
+  @@unique([trackingPlanId, version])
+  @@schema("analytics")
+  @@map("tracking_plan_version")
+}
+
+model RawEvent {
+  id                String      @default(uuid()) @db.Uuid
+  eventId           String      @map("event_id") @db.Uuid
+  organizationId    String      @map("organization_id") @db.Uuid
+  workspaceId       String      @map("workspace_id") @db.Uuid
+  sourceId          String      @map("source_id") @db.Uuid
+  environment       Environment
+  schemaVersion     String      @map("schema_version")
+  processingVersion String      @map("processing_version")
+  type              String
+  name              String
+  anonymousId       String?     @map("anonymous_id")
+  userId            String?     @map("user_id")
+  groupId           String?     @map("group_id")
+  sessionId         String?     @map("session_id")
+  properties        Json
+  traits            Json?
+  context           Json?
+  sdkName           String      @map("sdk_name")
+  sdkVersion        String      @map("sdk_version")
+  occurredAt        DateTime    @map("occurred_at")
+  receivedAt        DateTime    @map("received_at")
+  createdAt         DateTime    @default(now()) @map("created_at")
+
+  @@id([id, occurredAt])
+  @@unique([sourceId, environment, eventId, occurredAt])
+  @@index([organizationId, workspaceId, occurredAt])
+  @@index([sourceId, environment, name, occurredAt])
+  @@index([userId, occurredAt])
+  @@index([sessionId, occurredAt])
+  @@schema("analytics")
+  @@map("raw_event")
+}
+
+model QuarantinedEvent {
+  id             String      @id @default(uuid()) @db.Uuid
+  eventId        String      @map("event_id") @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  workspaceId    String      @map("workspace_id") @db.Uuid
+  sourceId       String      @map("source_id") @db.Uuid
+  environment    Environment
+  payload        Json
+  issues         Json
+  createdAt      DateTime    @default(now()) @map("created_at")
+  resolvedAt     DateTime?   @map("resolved_at")
+
+  @@index([organizationId, workspaceId, createdAt])
+  @@index([sourceId, environment, eventId])
+  @@schema("analytics")
+  @@map("quarantined_event")
+}
+
+model Identity {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String   @map("workspace_id") @db.Uuid
+  canonicalId    String   @map("canonical_id")
+  traits         Json
+  tags           String[] @default([])
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@unique([workspaceId, canonicalId])
+  @@index([organizationId, workspaceId])
+  @@schema("analytics")
+  @@map("identity")
+}
+
+model IdentityAlias {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String   @map("workspace_id") @db.Uuid
+  previousId     String   @map("previous_id")
+  canonicalId    String   @map("canonical_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@unique([workspaceId, previousId])
+  @@index([workspaceId, canonicalId])
+  @@schema("analytics")
+  @@map("identity_alias")
+}
+
+model Session {
+  id             String      @id @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  workspaceId    String      @map("workspace_id") @db.Uuid
+  sourceId       String      @map("source_id") @db.Uuid
+  environment    Environment
+  anonymousId    String?     @map("anonymous_id")
+  userId         String?     @map("user_id")
+  startedAt      DateTime    @map("started_at")
+  lastSeenAt     DateTime    @map("last_seen_at")
+  eventCount     Int         @default(0) @map("event_count")
+  durationMs     BigInt      @default(0) @map("duration_ms")
+
+  @@index([organizationId, workspaceId, startedAt])
+  @@index([userId, startedAt])
+  @@schema("analytics")
+  @@map("session")
+}
+
+model MetricDefinition {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  key            String
+  name           String
+  lifecycle      Lifecycle @default(DRAFT)
+  activeVersion  Int?      @map("active_version")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  versions MetricVersion[]
+  @@unique([workspaceId, key])
+  @@index([organizationId, workspaceId, lifecycle])
+  @@schema("analytics")
+  @@map("metric_definition")
+}
+
+model MetricVersion {
+  id                 String   @id @default(uuid()) @db.Uuid
+  metricDefinitionId String   @map("metric_definition_id") @db.Uuid
+  version            Int
+  definitionVersion  String   @map("definition_version")
+  queryAst           Json     @map("query_ast")
+  createdBy          String   @map("created_by")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  metricDefinition MetricDefinition @relation(fields: [metricDefinitionId], references: [id], onDelete: Cascade)
+  @@unique([metricDefinitionId, version])
+  @@schema("analytics")
+  @@map("metric_version")
+}
+
+model AggregateBucket {
+  id                String   @id @default(uuid()) @db.Uuid
+  organizationId    String   @map("organization_id") @db.Uuid
+  workspaceId       String   @map("workspace_id") @db.Uuid
+  metricVersionId   String   @map("metric_version_id") @db.Uuid
+  bucketStart       DateTime @map("bucket_start")
+  bucketSize        String   @map("bucket_size")
+  dimensions        Json
+  value             Decimal  @db.Decimal(30, 8)
+  inputCount        BigInt   @map("input_count")
+  watermark         DateTime
+  processingVersion String   @map("processing_version")
+  kafkaOffsets      Json?    @map("kafka_offsets")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@unique([metricVersionId, bucketStart, bucketSize, dimensions])
+  @@index([organizationId, workspaceId, bucketStart])
+  @@schema("analytics")
+  @@map("aggregate_bucket")
+}
+
+model DataAsset {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  type           String
+  key            String
+  lifecycle      Lifecycle @default(DRAFT)
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  versions DataAssetVersion[]
+  @@unique([workspaceId, type, key])
+  @@schema("analytics")
+  @@map("data_asset")
+}
+
+model DataAssetVersion {
+  id          String   @id @default(uuid()) @db.Uuid
+  dataAssetId String   @map("data_asset_id") @db.Uuid
+  version     Int
+  definition  Json
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  dataAsset DataAsset @relation(fields: [dataAssetId], references: [id], onDelete: Cascade)
+  @@unique([dataAssetId, version])
+  @@schema("analytics")
+  @@map("data_asset_version")
+}
+
+model LineageEdge {
+  id            String   @id @default(uuid()) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+  workspaceId   String   @map("workspace_id") @db.Uuid
+  inputVersionId String  @map("input_version_id") @db.Uuid
+  outputVersionId String @map("output_version_id") @db.Uuid
+  transformationId String? @map("transformation_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([inputVersionId, outputVersionId, transformationId])
+  @@index([organizationId, workspaceId])
+  @@schema("analytics")
+  @@map("lineage_edge")
+}
+
+model ProcessingRun {
+  id                String    @id @default(uuid()) @db.Uuid
+  organizationId    String    @map("organization_id") @db.Uuid
+  workspaceId       String    @map("workspace_id") @db.Uuid
+  type              String
+  processingVersion String    @map("processing_version")
+  status            JobStatus @default(PENDING)
+  inputCount        BigInt    @default(0) @map("input_count")
+  outputCount       BigInt    @default(0) @map("output_count")
+  rejectedCount     BigInt    @default(0) @map("rejected_count")
+  watermark         DateTime?
+  metadata          Json?
+  startedAt         DateTime? @map("started_at")
+  completedAt       DateTime? @map("completed_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  @@index([organizationId, workspaceId, createdAt])
+  @@schema("analytics")
+  @@map("processing_run")
+}
+
+model RuleSet {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  name           String
+  lifecycle      Lifecycle @default(DRAFT)
+  activeVersion  Int?      @map("active_version")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  versions RuleVersion[]
+  @@index([organizationId, workspaceId, lifecycle])
+  @@schema("analytics")
+  @@map("rule_set")
+}
+
+model RuleVersion {
+  id                String   @id @default(uuid()) @db.Uuid
+  ruleSetId         String   @map("rule_set_id") @db.Uuid
+  version           Int
+  definitionVersion String   @map("definition_version")
+  condition         Json
+  actions           Json
+  createdBy         String   @map("created_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  ruleSet RuleSet @relation(fields: [ruleSetId], references: [id], onDelete: Cascade)
+  @@unique([ruleSetId, version])
+  @@schema("analytics")
+  @@map("rule_version")
+}
+
+model AlertRule {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  name           String
+  lifecycle      Lifecycle @default(DRAFT)
+  condition      Json
+  cooldownSeconds Int      @default(900) @map("cooldown_seconds")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId, workspaceId, lifecycle])
+  @@schema("analytics")
+  @@map("alert_rule")
+}
+
+model AlertIncident {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String   @map("workspace_id") @db.Uuid
+  alertRuleId    String   @map("alert_rule_id") @db.Uuid
+  status         String
+  dimensions     Json
+  openedAt       DateTime @default(now()) @map("opened_at")
+  acknowledgedAt DateTime? @map("acknowledged_at")
+  resolvedAt     DateTime? @map("resolved_at")
+
+  @@index([organizationId, workspaceId, status, openedAt])
+  @@schema("analytics")
+  @@map("alert_incident")
+}
+
+model PluginDefinition {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  name           String
+  lifecycle      Lifecycle @default(DRAFT)
+  manifest       Json
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId, workspaceId, lifecycle])
+  @@schema("analytics")
+  @@map("plugin_definition")
+}
+
+model WebhookEndpoint {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String   @map("workspace_id") @db.Uuid
+  url            String
+  secretHash     String   @map("secret_hash")
+  events         String[]
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, workspaceId, active])
+  @@schema("analytics")
+  @@map("webhook_endpoint")
+}
+
+model Schedule {
+  id                String                    @id @default(uuid()) @db.Uuid
+  organizationId    String                    @map("organization_id") @db.Uuid
+  workspaceId       String                    @map("workspace_id") @db.Uuid
+  targetType        String                    @map("target_type")
+  targetId          String                    @map("target_id")
+  cron              String
+  timezone          String
+  misfirePolicy     ScheduleMisfirePolicy     @default(FIRE_ONCE) @map("misfire_policy")
+  concurrencyPolicy ScheduleConcurrencyPolicy @default(FORBID) @map("concurrency_policy")
+  maxRetries        Int                       @default(5) @map("max_retries")
+  active            Boolean                   @default(true)
+  nextRunAt         DateTime                  @map("next_run_at")
+  lastRunAt         DateTime?                 @map("last_run_at")
+  createdAt         DateTime                  @default(now()) @map("created_at")
+  updatedAt         DateTime                  @updatedAt @map("updated_at")
+
+  runs ScheduleRun[]
+  @@index([active, nextRunAt])
+  @@index([organizationId, workspaceId])
+  @@schema("analytics")
+  @@map("schedule")
+}
+
+model ScheduleRun {
+  id           String    @id @default(uuid()) @db.Uuid
+  scheduleId   String    @map("schedule_id") @db.Uuid
+  scheduledFor DateTime  @map("scheduled_for")
+  status       JobStatus @default(PENDING)
+  attempt      Int       @default(0)
+  error        String?
+  startedAt    DateTime? @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  @@unique([scheduleId, scheduledFor])
+  @@schema("analytics")
+  @@map("schedule_run")
+}
+
+model UsageRecord {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String?  @map("workspace_id") @db.Uuid
+  meter          String
+  quantity       Decimal  @db.Decimal(30, 8)
+  dimensions     Json
+  occurredAt     DateTime @map("occurred_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, workspaceId, meter, occurredAt])
+  @@schema("analytics")
+  @@map("usage_record")
+}
+
+model UsageBucket {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String?  @map("workspace_id") @db.Uuid
+  meter          String
+  bucketStart    DateTime @map("bucket_start")
+  bucketSize     String   @map("bucket_size")
+  quantity       Decimal  @db.Decimal(30, 8)
+  costEstimate   Decimal? @map("cost_estimate") @db.Decimal(30, 8)
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, workspaceId, meter, bucketStart, bucketSize])
+  @@schema("analytics")
+  @@map("usage_bucket")
+}
+
+model QuotaDefinition {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  description String?
+  unit        String
+  period      String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  assignments QuotaAssignment[]
+  @@schema("analytics")
+  @@map("quota_definition")
+}
+
+model QuotaAssignment {
+  id                String     @id @default(uuid()) @db.Uuid
+  quotaDefinitionId String     @map("quota_definition_id") @db.Uuid
+  organizationId    String     @map("organization_id") @db.Uuid
+  workspaceId       String?    @map("workspace_id") @db.Uuid
+  scope             QuotaScope
+  limit             Decimal    @db.Decimal(30, 8)
+  warningPercent    Int        @default(80) @map("warning_percent")
+  hard              Boolean    @default(false)
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+
+  quotaDefinition QuotaDefinition @relation(fields: [quotaDefinitionId], references: [id], onDelete: Cascade)
+  @@unique([quotaDefinitionId, organizationId, workspaceId])
+  @@index([organizationId, workspaceId])
+  @@schema("analytics")
+  @@map("quota_assignment")
+}
+
+model QuotaViolation {
+  id                String   @id @default(uuid()) @db.Uuid
+  quotaAssignmentId String   @map("quota_assignment_id") @db.Uuid
+  organizationId    String   @map("organization_id") @db.Uuid
+  workspaceId       String?  @map("workspace_id") @db.Uuid
+  observed          Decimal  @db.Decimal(30, 8)
+  limit             Decimal  @db.Decimal(30, 8)
+  hard              Boolean
+  occurredAt        DateTime @default(now()) @map("occurred_at")
+
+  @@index([organizationId, workspaceId, occurredAt])
+  @@schema("analytics")
+  @@map("quota_violation")
+}
+
+model ImportJob {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  sourceId       String    @map("source_id") @db.Uuid
+  status         JobStatus @default(PENDING)
+  format         String
+  objectKey      String    @map("object_key")
+  mapping        Json
+  dryRun         Boolean   @default(true) @map("dry_run")
+  suppressActions Boolean  @default(true) @map("suppress_actions")
+  issueCount     Int       @default(0) @map("issue_count")
+  createdBy      String    @map("created_by")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  completedAt    DateTime? @map("completed_at")
+
+  @@index([organizationId, workspaceId, createdAt])
+  @@schema("analytics")
+  @@map("import_job")
+}
+
+model ExportJob {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  status         JobStatus @default(PENDING)
+  format         String
+  definition     Json
+  objectKey      String?   @map("object_key")
+  sizeBytes      BigInt?   @map("size_bytes")
+  expiresAt      DateTime? @map("expires_at")
+  createdBy      String    @map("created_by")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  completedAt    DateTime? @map("completed_at")
+
+  @@index([organizationId, workspaceId, createdAt])
+  @@schema("analytics")
+  @@map("export_job")
+}
+
+model ReplayJob {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  status         JobStatus @default(PENDING)
+  filter         Json
+  dryRun         Boolean   @default(true) @map("dry_run")
+  requestedBy    String    @map("requested_by")
+  inputCount     BigInt    @default(0) @map("input_count")
+  replayedCount  BigInt    @default(0) @map("replayed_count")
+  skippedCount   BigInt    @default(0) @map("skipped_count")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  completedAt    DateTime? @map("completed_at")
+
+  @@index([organizationId, workspaceId, createdAt])
+  @@schema("analytics")
+  @@map("replay_job")
+}
+
+model Dashboard {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  name           String
+  lifecycle      Lifecycle @default(DRAFT)
+  definition     Json
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId, workspaceId, lifecycle])
+  @@schema("analytics")
+  @@map("dashboard")
+}
+
+model Report {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  name           String
+  lifecycle      Lifecycle @default(DRAFT)
+  definition     Json
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId, workspaceId, lifecycle])
+  @@schema("analytics")
+  @@map("report")
+}
+
+model FeatureFlag {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  key            String
+  lifecycle      Lifecycle @default(DRAFT)
+  definition     Json
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([workspaceId, key])
+  @@schema("analytics")
+  @@map("feature_flag")
+}
+
+model Experiment {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  key            String
+  lifecycle      Lifecycle @default(DRAFT)
+  definition     Json
+  startedAt      DateTime? @map("started_at")
+  endedAt        DateTime? @map("ended_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([workspaceId, key])
+  @@schema("analytics")
+  @@map("experiment")
+}
+
+model AuditEntry {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String?  @map("workspace_id") @db.Uuid
+  actorId        String   @map("actor_id")
+  action         String
+  resourceType   String   @map("resource_type")
+  resourceId     String   @map("resource_id")
+  correlationId  String?  @map("correlation_id")
+  causationId    String?  @map("causation_id")
+  result         String
+  changes        Json?
+  metadata       Json?
+  occurredAt     DateTime @default(now()) @map("occurred_at")
+
+  @@index([organizationId, workspaceId, occurredAt])
+  @@index([actorId, occurredAt])
+  @@index([resourceType, resourceId])
+  @@schema("analytics")
+  @@map("audit_entry")
+}
