@@ -26,6 +26,7 @@ import {
   Resolver,
 } from "@nestjs/graphql";
 import { PrismaService } from "../prisma/prisma.service.js";
+import { LineageService } from "../lineage/lineage.service.js";
 import { RealtimeMetricsService } from "./realtime-metrics.service.js";
 import { SemanticQueryService } from "./semantic-query.service.js";
 
@@ -93,6 +94,7 @@ export class AnalyticsEngineResolver {
     private readonly prisma: PrismaService,
     private readonly semantic: SemanticQueryService,
     private readonly realtime: RealtimeMetricsService,
+    private readonly lineage: LineageService,
   ) {}
 
   @Mutation(() => MetricDefinitionPayload)
@@ -125,6 +127,22 @@ export class AnalyticsEngineResolver {
           },
         },
       },
+    });
+    const version = await this.prisma.metricVersion.findUniqueOrThrow({
+      where: {
+        metricDefinitionId_version: {
+          metricDefinitionId: metric.id,
+          version: 1,
+        },
+      },
+    });
+    await this.lineage.registerMetricDefinition({
+      organizationId: tenant,
+      workspaceId,
+      metricId: metric.id,
+      metricVersionId: version.id,
+      version: 1,
+      definition,
     });
     return {
       id: metric.id,
@@ -184,6 +202,13 @@ export class AnalyticsEngineResolver {
           },
         },
       },
+    });
+    await this.lineage.registerKpiDefinition({
+      organizationId: tenant,
+      workspaceId,
+      kpiId: kpi.id,
+      version: 1,
+      definition,
     });
     return {
       id: kpi.id,

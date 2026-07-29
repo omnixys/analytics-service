@@ -97,6 +97,7 @@ test("aggregation updates a serializable rollup and realtime projection", async 
     prisma,
     new MetricCompilerService(),
     { project: async (...args) => projected.push(args) },
+    { recordMetricRun: async () => undefined },
   );
 
   const count = await service.process(

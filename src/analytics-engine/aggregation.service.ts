@@ -6,6 +6,7 @@ import { Injectable } from "@nestjs/common";
 import { createHash } from "node:crypto";
 import type { Prisma } from "../prisma/generated/client.js";
 import { PrismaService } from "../prisma/prisma.service.js";
+import { LineageService } from "../lineage/lineage.service.js";
 import { MetricCompilerService } from "./metric-compiler.service.js";
 import { RealtimeMetricsService } from "./realtime-metrics.service.js";
 
@@ -17,6 +18,7 @@ export class AggregationService {
     private readonly prisma: PrismaService,
     private readonly compiler: MetricCompilerService,
     private readonly realtime: RealtimeMetricsService,
+    private readonly lineage: LineageService,
   ) {}
 
   async process(payload: AnalyticsProcessingEvent): Promise<number> {
@@ -50,6 +52,7 @@ export class AggregationService {
         value,
         new Date(payload.event.occurredAt),
       );
+      await this.lineage.recordMetricRun(version.id, definition, payload);
     }
     return updated;
   }

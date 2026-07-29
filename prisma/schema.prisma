@@ -479,6 +479,8 @@ model DataAssetVersion {
   createdAt   DateTime @default(now()) @map("created_at")
 
   dataAsset DataAsset @relation(fields: [dataAssetId], references: [id], onDelete: Cascade)
+  runInputs LineageRunInput[]
+  runOutputs LineageRunOutput[]
   @@unique([dataAssetId, version])
   @@schema("analytics")
   @@map("data_asset_version")
@@ -518,6 +520,58 @@ model ProcessingRun {
   @@index([organizationId, workspaceId, createdAt])
   @@schema("analytics")
   @@map("processing_run")
+}
+
+model LineageRun {
+  id                String    @id @default(uuid()) @db.Uuid
+  organizationId    String    @map("organization_id") @db.Uuid
+  workspaceId       String    @map("workspace_id") @db.Uuid
+  runKey            String    @map("run_key")
+  type              String
+  status            JobStatus @default(RUNNING)
+  processingVersion String    @map("processing_version")
+  definitionVersion String?   @map("definition_version")
+  watermark         DateTime?
+  inputCount        BigInt    @default(0) @map("input_count")
+  outputCount       BigInt    @default(0) @map("output_count")
+  discardedCount    BigInt    @default(0) @map("discarded_count")
+  kafkaOffsets      Json?     @map("kafka_offsets")
+  startedAt         DateTime  @default(now()) @map("started_at")
+  completedAt       DateTime? @map("completed_at")
+
+  inputs LineageRunInput[]
+  outputs LineageRunOutput[]
+  @@unique([workspaceId, runKey])
+  @@index([organizationId, workspaceId, watermark])
+  @@schema("analytics")
+  @@map("lineage_run")
+}
+
+model LineageRunInput {
+  id             String   @id @default(uuid()) @db.Uuid
+  lineageRunId   String   @map("lineage_run_id") @db.Uuid
+  assetVersionId String   @map("asset_version_id") @db.Uuid
+  recordCount    BigInt   @default(0) @map("record_count")
+  discardedCount BigInt  @default(0) @map("discarded_count")
+
+  lineageRun LineageRun @relation(fields: [lineageRunId], references: [id], onDelete: Cascade)
+  assetVersion DataAssetVersion @relation(fields: [assetVersionId], references: [id], onDelete: Restrict)
+  @@unique([lineageRunId, assetVersionId])
+  @@schema("analytics")
+  @@map("lineage_run_input")
+}
+
+model LineageRunOutput {
+  id             String   @id @default(uuid()) @db.Uuid
+  lineageRunId   String   @map("lineage_run_id") @db.Uuid
+  assetVersionId String   @map("asset_version_id") @db.Uuid
+  recordCount    BigInt   @default(0) @map("record_count")
+
+  lineageRun LineageRun @relation(fields: [lineageRunId], references: [id], onDelete: Cascade)
+  assetVersion DataAssetVersion @relation(fields: [assetVersionId], references: [id], onDelete: Restrict)
+  @@unique([lineageRunId, assetVersionId])
+  @@schema("analytics")
+  @@map("lineage_run_output")
 }
 
 model RuleSet {

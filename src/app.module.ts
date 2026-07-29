@@ -15,6 +15,7 @@ import { HealthModule } from "./health/health.module.js";
 import { IngestionModule } from "./ingestion/ingestion.module.js";
 import { PrismaModule } from "./prisma/prisma.module.js";
 import { ProcessingModule } from "./processing/processing.module.js";
+import { LineageModule } from "./lineage/lineage.module.js";
 import { ReplayModule } from "./replay/replay.module.js";
 import { SearchModule } from "./search/search.module.js";
 
@@ -69,6 +70,7 @@ import { SearchModule } from "./search/search.module.js";
     CatalogModule,
     IngestionModule,
     ProcessingModule,
+    LineageModule,
     AnalyticsEngineModule,
     ReplayModule,
     SearchModule,
