@@ -11,6 +11,7 @@ function required(name: string, developmentDefault: string): string {
 export const env = {
   NODE_ENV: process.env.NODE_ENV ?? "development",
   PORT: Number(process.env.PORT ?? 7410),
+  RATE_LIMIT_REQUESTS: Number(process.env.RATE_LIMIT_REQUESTS ?? 12_000),
   SERVICE: process.env.SERVICE ?? "analytics",
   DATABASE_URL: required(
     "DATABASE_URL",

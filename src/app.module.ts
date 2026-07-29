@@ -40,7 +40,11 @@ import { RuleModule } from "./rules/rule.module.js";
         issuer: `${env.KC_URL}/realms/${env.KC_REALM}`,
         jwksUri: `${env.KC_URL}/realms/${env.KC_REALM}/protocol/openid-connect/certs`,
       },
-      rateLimit: { enabled: false },
+      rateLimit: {
+        enabled: true,
+        defaultLimit: env.RATE_LIMIT_REQUESTS,
+        defaultWindowMs: 60_000,
+      },
       hash: { encryptionKey: env.ENCRYPTION_KEY },
     }),
     OmnixysGraphQLModule.forRoot({
