@@ -44,6 +44,9 @@ importers:
       '@omnixys/graphql':
         specifier: link:../../packages/ts/graphql
         version: link:../../packages/ts/graphql
+      '@omnixys/http':
+        specifier: link:../../packages/ts/http
+        version: link:../../packages/ts/http
       '@omnixys/kafka':
         specifier: link:../../packages/ts/kafka
         version: link:../../packages/ts/kafka

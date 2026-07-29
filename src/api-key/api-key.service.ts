@@ -1,4 +1,5 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { ErrorCode, FrameworkException } from "@omnixys/contracts";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../prisma/prisma.service.js";
 import type { ApiKey, Environment } from "../prisma/generated/client.js";
@@ -16,19 +17,37 @@ export class ApiKeyService {
     const rawKey = bearerToken(authorization);
     const prefix = rawKey.split(".", 1)[0];
     if (!prefix || !rawKey.includes(".")) {
-      throw new UnauthorizedException("Invalid analytics API key");
+      throw new FrameworkException(
+        ErrorCode.ANALYTICS_API_KEY_INVALID,
+        "Invalid analytics API key",
+      );
     }
     const apiKey = await this.prisma.apiKey.findUnique({ where: { prefix } });
     if (
-      !apiKey ||
-      apiKey.revokedAt ||
-      (apiKey.expiresAt && apiKey.expiresAt <= new Date()) ||
-      !safeEqual(apiKey.secretHash, digest(rawKey))
+      !apiKey || !safeEqual(apiKey.secretHash, digest(rawKey))
     ) {
-      throw new UnauthorizedException("Invalid analytics API key");
+      throw new FrameworkException(
+        ErrorCode.ANALYTICS_API_KEY_INVALID,
+        "Invalid analytics API key",
+      );
+    }
+    if (apiKey.revokedAt) {
+      throw new FrameworkException(
+        ErrorCode.ANALYTICS_API_KEY_REVOKED,
+        "Analytics API key is revoked",
+      );
+    }
+    if (apiKey.expiresAt && apiKey.expiresAt <= new Date()) {
+      throw new FrameworkException(
+        ErrorCode.ANALYTICS_API_KEY_EXPIRED,
+        "Analytics API key is expired",
+      );
     }
     if (!apiKey.scopes.includes("events:write")) {
-      throw new UnauthorizedException("Analytics API key lacks events:write");
+      throw new FrameworkException(
+        ErrorCode.ANALYTICS_SCOPE_FORBIDDEN,
+        "Analytics API key lacks events:write",
+      );
     }
     void this.prisma.apiKey.update({
       where: { id: apiKey.id },
@@ -45,7 +64,10 @@ export class ApiKeyService {
 function bearerToken(header: string | undefined): string {
   const [scheme, token] = (header ?? "").split(/\s+/, 2);
   if (scheme?.toLowerCase() !== "bearer" || !token) {
-    throw new UnauthorizedException("Bearer analytics API key is required");
+    throw new FrameworkException(
+      ErrorCode.ANALYTICS_API_KEY_REQUIRED,
+      "Bearer analytics API key is required",
+    );
   }
   return token;
 }

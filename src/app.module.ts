@@ -3,6 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { ValkeyModule } from "@omnixys/cache";
 import { ContextModule } from "@omnixys/context";
 import { OmnixysGraphQLModule } from "@omnixys/graphql";
+import { OmnixysHttpModule } from "@omnixys/http";
 import { KafkaModule } from "@omnixys/kafka";
 import { LoggerModule } from "@omnixys/logger";
 import { ObservabilityModule } from "@omnixys/observability";
@@ -25,6 +26,7 @@ import { FeatureFlagModule } from "./feature-flags/feature-flag.module.js";
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ContextModule.forRoot(),
+    OmnixysHttpModule.forRoot({ serviceName: env.SERVICE }),
     ValkeyModule.forRoot({
       serviceName: env.SERVICE,
       url: env.VALKEY_URL,

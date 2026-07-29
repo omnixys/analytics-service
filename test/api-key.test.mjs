@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { UnauthorizedException } from "@nestjs/common";
+import { FrameworkException } from "@omnixys/contracts";
 import { ApiKeyService } from "../dist/api-key/api-key.service.js";
 
 const RAW_KEY = "omx_live.correct-horse-battery-staple";
@@ -48,7 +48,7 @@ test("rejects malformed, revoked and invalid analytics keys", async () => {
 
   await assert.rejects(
     service.authenticate(`Bearer ${RAW_KEY}`),
-    UnauthorizedException,
+    FrameworkException,
   );
-  await assert.rejects(service.authenticate(undefined), UnauthorizedException);
+  await assert.rejects(service.authenticate(undefined), FrameworkException);
 });
