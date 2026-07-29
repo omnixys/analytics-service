@@ -19,6 +19,7 @@ import { LineageModule } from "./lineage/lineage.module.js";
 import { ReplayModule } from "./replay/replay.module.js";
 import { SearchModule } from "./search/search.module.js";
 import { SchedulerModule } from "./scheduler/scheduler.module.js";
+import { FeatureFlagModule } from "./feature-flags/feature-flag.module.js";
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { SchedulerModule } from "./scheduler/scheduler.module.js";
     ReplayModule,
     SearchModule,
     SchedulerModule,
+    FeatureFlagModule,
     HealthModule,
   ],
   providers: [PlatformResolver],

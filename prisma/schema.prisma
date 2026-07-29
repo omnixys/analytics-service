@@ -933,13 +933,52 @@ model FeatureFlag {
   workspaceId    String    @map("workspace_id") @db.Uuid
   key            String
   lifecycle      Lifecycle @default(DRAFT)
-  definition     Json
+  activeVersion  Int?      @map("active_version")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
+  versions  FeatureFlagVersion[]
+  exposures FeatureFlagExposure[]
   @@unique([workspaceId, key])
+  @@index([organizationId, workspaceId, lifecycle])
   @@schema("analytics")
   @@map("feature_flag")
+}
+
+model FeatureFlagVersion {
+  id          String   @id @default(uuid()) @db.Uuid
+  flagId      String   @map("flag_id") @db.Uuid
+  version     Int
+  definition  Json
+  createdBy   String   @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  flag FeatureFlag @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  @@unique([flagId, version])
+  @@schema("analytics")
+  @@map("feature_flag_version")
+}
+
+model FeatureFlagExposure {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  workspaceId    String   @map("workspace_id") @db.Uuid
+  flagId         String   @map("flag_id") @db.Uuid
+  flagVersion    Int      @map("flag_version")
+  evaluationId   String   @map("evaluation_id") @db.Uuid
+  subjectId      String   @map("subject_id")
+  anonymousId    String?  @map("anonymous_id")
+  sessionId      String?  @map("session_id")
+  variant        String
+  ruleId         String?  @map("rule_id") @db.Uuid
+  occurredAt     DateTime @default(now()) @map("occurred_at")
+
+  flag FeatureFlag @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  @@unique([evaluationId, flagId])
+  @@index([organizationId, workspaceId, flagId, occurredAt])
+  @@index([subjectId, occurredAt])
+  @@schema("analytics")
+  @@map("feature_flag_exposure")
 }
 
 model Experiment {
