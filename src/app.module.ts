@@ -21,6 +21,7 @@ import { ReplayModule } from "./replay/replay.module.js";
 import { SearchModule } from "./search/search.module.js";
 import { SchedulerModule } from "./scheduler/scheduler.module.js";
 import { FeatureFlagModule } from "./feature-flags/feature-flag.module.js";
+import { RuleModule } from "./rules/rule.module.js";
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { FeatureFlagModule } from "./feature-flags/feature-flag.module.js";
     SearchModule,
     SchedulerModule,
     FeatureFlagModule,
+    RuleModule,
     HealthModule,
   ],
   providers: [PlatformResolver],
