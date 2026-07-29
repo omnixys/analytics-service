@@ -12,6 +12,8 @@ import { PlatformResolver } from "./graphql/platform.resolver.js";
 import { HealthModule } from "./health/health.module.js";
 import { IngestionModule } from "./ingestion/ingestion.module.js";
 import { PrismaModule } from "./prisma/prisma.module.js";
+import { ProcessingModule } from "./processing/processing.module.js";
+import { ReplayModule } from "./replay/replay.module.js";
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { PrismaModule } from "./prisma/prisma.module.js";
     PrismaModule,
     CatalogModule,
     IngestionModule,
+    ProcessingModule,
+    ReplayModule,
     HealthModule,
   ],
   providers: [PlatformResolver],

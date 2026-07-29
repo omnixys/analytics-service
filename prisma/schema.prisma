@@ -700,9 +700,52 @@ model ReplayJob {
   createdAt      DateTime  @default(now()) @map("created_at")
   completedAt    DateTime? @map("completed_at")
 
+  items ReplayItem[]
   @@index([organizationId, workspaceId, createdAt])
   @@schema("analytics")
   @@map("replay_job")
+}
+
+model ReplayItem {
+  id             String    @id @default(uuid()) @db.Uuid
+  replayJobId    String    @map("replay_job_id") @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  eventId        String    @map("event_id") @db.Uuid
+  occurredAt     DateTime  @map("occurred_at")
+  status         JobStatus @default(PENDING)
+  attempts       Int       @default(0)
+  error          String?
+  processedAt    DateTime? @map("processed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  replayJob ReplayJob @relation(fields: [replayJobId], references: [id], onDelete: Cascade)
+  @@unique([replayJobId, eventId, occurredAt])
+  @@index([organizationId, workspaceId, status])
+  @@schema("analytics")
+  @@map("replay_item")
+}
+
+model DeadLetterReference {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @map("organization_id") @db.Uuid
+  workspaceId    String?  @map("workspace_id") @db.Uuid
+  topic          String
+  partition      Int
+  offset         String
+  eventId        String?  @map("event_id")
+  errorCode      String?  @map("error_code")
+  errorMessage   String   @map("error_message")
+  headers        Json?
+  payload        Json?
+  retryCount     Int      @default(0) @map("retry_count")
+  firstFailedAt  DateTime @default(now()) @map("first_failed_at")
+  resolvedAt     DateTime? @map("resolved_at")
+
+  @@unique([topic, partition, offset])
+  @@index([organizationId, workspaceId, firstFailedAt])
+  @@schema("analytics")
+  @@map("dead_letter_reference")
 }
 
 model Dashboard {

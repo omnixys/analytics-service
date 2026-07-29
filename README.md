@@ -15,3 +15,7 @@ pnpm run test
 
 Lokale Infrastrukturwerte stehen in `.env.example`. Architekturentscheidungen
 sind unter [docs/adr](docs/adr/README.md) dokumentiert.
+
+## Implementierungsphasen
+
+- [Phase 2: Event Processing Engine](docs/phases/phase-02-event-processing.md)
