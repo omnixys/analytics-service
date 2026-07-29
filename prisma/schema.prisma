@@ -356,17 +356,86 @@ model AggregateBucket {
   bucketStart       DateTime @map("bucket_start")
   bucketSize        String   @map("bucket_size")
   dimensions        Json
+  dimensionKey      String   @map("dimension_key")
   value             Decimal  @db.Decimal(30, 8)
   inputCount        BigInt   @map("input_count")
+  sumValue          Decimal  @default(0) @map("sum_value") @db.Decimal(30, 8)
+  minimumValue      Decimal? @map("minimum_value") @db.Decimal(30, 8)
+  maximumValue      Decimal? @map("maximum_value") @db.Decimal(30, 8)
+  numeratorCount    BigInt   @default(0) @map("numerator_count")
+  denominatorCount  BigInt   @default(0) @map("denominator_count")
   watermark         DateTime
   processingVersion String   @map("processing_version")
   kafkaOffsets      Json?    @map("kafka_offsets")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
-  @@unique([metricVersionId, bucketStart, bucketSize, dimensions])
+  distinctValues AggregateDistinctValue[]
+  @@unique([metricVersionId, bucketStart, bucketSize, dimensionKey])
   @@index([organizationId, workspaceId, bucketStart])
   @@schema("analytics")
   @@map("aggregate_bucket")
+}
+
+model AggregateDistinctValue {
+  id                String   @id @default(uuid()) @db.Uuid
+  aggregateBucketId String   @map("aggregate_bucket_id") @db.Uuid
+  valueHash         String   @map("value_hash")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  aggregateBucket AggregateBucket @relation(fields: [aggregateBucketId], references: [id], onDelete: Cascade)
+  @@unique([aggregateBucketId, valueHash])
+  @@schema("analytics")
+  @@map("aggregate_distinct_value")
+}
+
+model KpiDefinition {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  key            String
+  name           String
+  lifecycle      Lifecycle @default(DRAFT)
+  activeVersion  Int?      @map("active_version")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  versions KpiVersion[]
+  @@unique([workspaceId, key])
+  @@index([organizationId, workspaceId, lifecycle])
+  @@schema("analytics")
+  @@map("kpi_definition")
+}
+
+model KpiVersion {
+  id                String   @id @default(uuid()) @db.Uuid
+  kpiDefinitionId   String   @map("kpi_definition_id") @db.Uuid
+  version           Int
+  definitionVersion String   @map("definition_version")
+  expression        Json
+  format            String
+  unit              String?
+  createdBy         String   @map("created_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  kpiDefinition KpiDefinition @relation(fields: [kpiDefinitionId], references: [id], onDelete: Cascade)
+  @@unique([kpiDefinitionId, version])
+  @@schema("analytics")
+  @@map("kpi_version")
+}
+
+model MaterializedViewState {
+  id                String   @id @default(uuid()) @db.Uuid
+  organizationId    String   @map("organization_id") @db.Uuid
+  workspaceId       String   @map("workspace_id") @db.Uuid
+  viewKey           String   @map("view_key")
+  watermark         DateTime
+  refreshedAt       DateTime @map("refreshed_at")
+  processingVersion String   @map("processing_version")
+  rowCount          BigInt   @default(0) @map("row_count")
+
+  @@unique([workspaceId, viewKey])
+  @@schema("analytics")
+  @@map("materialized_view_state")
 }
 
 model DataAsset {

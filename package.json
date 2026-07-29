@@ -26,6 +26,7 @@
     "@nestjs/graphql": "^13.4.2",
     "@nestjs/platform-fastify": "^11.1.28",
     "@omnixys/cache": "link:../../packages/ts/cache",
+    "@omnixys/analytics-rule-engine": "link:../../packages/ts/analytics-rule-engine",
     "@omnixys/context": "link:../../packages/ts/context",
     "@omnixys/contracts": "link:../../packages/ts/contracts",
     "@omnixys/graphql": "link:../../packages/ts/graphql",
