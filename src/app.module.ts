@@ -16,6 +16,7 @@ import { IngestionModule } from "./ingestion/ingestion.module.js";
 import { PrismaModule } from "./prisma/prisma.module.js";
 import { ProcessingModule } from "./processing/processing.module.js";
 import { ReplayModule } from "./replay/replay.module.js";
+import { SearchModule } from "./search/search.module.js";
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { ReplayModule } from "./replay/replay.module.js";
     ProcessingModule,
     AnalyticsEngineModule,
     ReplayModule,
+    SearchModule,
     HealthModule,
   ],
   providers: [PlatformResolver],
