@@ -18,6 +18,7 @@ import { ProcessingModule } from "./processing/processing.module.js";
 import { LineageModule } from "./lineage/lineage.module.js";
 import { ReplayModule } from "./replay/replay.module.js";
 import { SearchModule } from "./search/search.module.js";
+import { SchedulerModule } from "./scheduler/scheduler.module.js";
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { SearchModule } from "./search/search.module.js";
     AnalyticsEngineModule,
     ReplayModule,
     SearchModule,
+    SchedulerModule,
     HealthModule,
   ],
   providers: [PlatformResolver],

@@ -679,7 +679,10 @@ model Schedule {
   misfirePolicy     ScheduleMisfirePolicy     @default(FIRE_ONCE) @map("misfire_policy")
   concurrencyPolicy ScheduleConcurrencyPolicy @default(FORBID) @map("concurrency_policy")
   maxRetries        Int                       @default(5) @map("max_retries")
+  retryBaseSeconds  Int                       @default(30) @map("retry_base_seconds")
   active            Boolean                   @default(true)
+  startAt           DateTime?                 @map("start_at")
+  endAt             DateTime?                 @map("end_at")
   nextRunAt         DateTime                  @map("next_run_at")
   lastRunAt         DateTime?                 @map("last_run_at")
   createdAt         DateTime                  @default(now()) @map("created_at")
@@ -699,12 +702,17 @@ model ScheduleRun {
   status       JobStatus @default(PENDING)
   attempt      Int       @default(0)
   error        String?
+  claimedBy    String?   @map("claimed_by")
+  claimedAt    DateTime? @map("claimed_at")
+  nextRetryAt  DateTime? @map("next_retry_at")
+  idempotencyKey String  @unique @map("idempotency_key")
   startedAt    DateTime? @map("started_at")
   completedAt  DateTime? @map("completed_at")
   createdAt    DateTime  @default(now()) @map("created_at")
 
   schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
   @@unique([scheduleId, scheduledFor])
+  @@index([status, nextRetryAt])
   @@schema("analytics")
   @@map("schedule_run")
 }
