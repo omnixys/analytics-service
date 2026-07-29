@@ -8,10 +8,16 @@ function required(name: string, developmentDefault: string): string {
   return value ?? developmentDefault;
 }
 
+function enabled(name: string): boolean {
+  return process.env[name]?.toLowerCase() === "true";
+}
+
 export const env = {
   NODE_ENV: process.env.NODE_ENV ?? "development",
   PORT: Number(process.env.PORT ?? 7410),
   RATE_LIMIT_REQUESTS: Number(process.env.RATE_LIMIT_REQUESTS ?? 12_000),
+  DOMAIN_INGESTION_ENABLED: enabled("DOMAIN_INGESTION_ENABLED"),
+  CLIENT_INGESTION_ENABLED: enabled("CLIENT_INGESTION_ENABLED"),
   SERVICE: process.env.SERVICE ?? "analytics",
   DATABASE_URL: required(
     "DATABASE_URL",
