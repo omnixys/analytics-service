@@ -8,8 +8,8 @@ import {
 } from "@nestjs/common";
 import { timingSafeEqual } from "node:crypto";
 import type { Environment } from "../prisma/generated/client.js";
-import { env } from "../config.js";
 import { BrowserTokenService } from "./browser-token.service.js";
+import { env } from "../config/env.js";
 
 @Controller("v1/analytics")
 export class BrowserTokenController {
@@ -28,7 +28,7 @@ export class BrowserTokenController {
     const value = body as Record<string, unknown>;
     return this.tokens.issue({
       organizationId,
-      origin: String(value.origin ?? ""),
+      origin: typeof value.origin === 'string' ? value.origin : '',
       environment: environment(value.environment),
       events: Array.isArray(value.events)
         ? value.events.filter((entry): entry is string => typeof entry === "string")
@@ -38,7 +38,7 @@ export class BrowserTokenController {
 }
 
 function environment(value: unknown): Environment {
-  const normalized = String(value ?? "development").toUpperCase();
+  const normalized = (typeof value === 'string' ? value : 'development').toUpperCase();
   if (
     normalized !== "DEVELOPMENT" &&
     normalized !== "STAGING" &&

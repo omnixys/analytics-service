@@ -7,9 +7,9 @@ import {
   Post,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import type { AnalyticsBatchResponse } from "@omnixys/contracts/analytics";
+import type { AnalyticsBatchResponse } from "@omnixys/contracts-ts/analytics";
 import { IngestionService } from "./ingestion.service.js";
-import { env } from "../config.js";
+import { env } from "../config/env.js";
 
 @Controller("v1/analytics")
 export class IngestionController {

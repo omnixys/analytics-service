@@ -3,7 +3,7 @@ import type {
   KpiDefinition,
   KpiExpression,
   MetricQueryDefinition,
-} from "@omnixys/contracts/analytics";
+} from "@omnixys/contracts-ts/analytics";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import type {
   DataAssetVersion,
@@ -490,6 +490,7 @@ function jsonRecord(value: unknown): Record<string, unknown> {
 
 function schemaOrdinal(version: string): number {
   const [major, minor] = version.split(".").map(Number);
+  if (major === undefined || minor === undefined) return 1;
   return Number.isInteger(major) && Number.isInteger(minor)
     ? major * 1_000 + minor
     : 1;

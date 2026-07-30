@@ -2,8 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import type { Environment } from "../prisma/generated/client.js";
 import { PrismaService } from "../prisma/prisma.service.js";
-import { env } from "../config.js";
 import type { IngestionPrincipal } from "../api-key/api-key.service.js";
+import { env } from "../config/env.js";
 
 interface BrowserTokenClaims {
   aud: "omnixys-analytics";

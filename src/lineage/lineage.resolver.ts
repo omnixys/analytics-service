@@ -1,5 +1,5 @@
-import { TenantId } from "@omnixys/context";
-import { CookieAuthGuard } from "@omnixys/security";
+import { TenantId } from "@omnixys/context-ts";
+import { CookieAuthGuard } from "@omnixys/security-ts";
 import { ForbiddenException, UseGuards } from "@nestjs/common";
 import {
   Args,
@@ -63,7 +63,7 @@ class LineageRunPayload {
   @Field()
   processingVersion!: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   definitionVersion!: string | null;
 
   @Field(() => GraphQLISODateTime, { nullable: true })

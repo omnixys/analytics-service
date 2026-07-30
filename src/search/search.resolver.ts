@@ -1,9 +1,9 @@
-import { TenantId } from "@omnixys/context";
+import { TenantId } from "@omnixys/context-ts";
 import {
   CookieAuthGuard,
   CurrentUser,
   type CurrentUserData,
-} from "@omnixys/security";
+} from "@omnixys/security-ts";
 import {
   BadRequestException,
   ForbiddenException,
@@ -90,7 +90,7 @@ class SearchPageInfoPayload {
   @Field()
   hasNextPage!: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   endCursor!: string | null;
 }
 
@@ -108,13 +108,13 @@ class EventSearchItemPayload {
   @Field()
   type!: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   userId!: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   anonymousId!: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   sessionId!: string | null;
 
   @Field(() => ID)
@@ -159,10 +159,10 @@ class SessionSearchItemPayload {
   @Field()
   environment!: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   userId!: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   anonymousId!: string | null;
 
   @Field(() => GraphQLISODateTime)
@@ -201,7 +201,7 @@ class CatalogSearchItemPayload {
   @Field()
   lifecycle!: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   description!: string | null;
 }
 
@@ -294,8 +294,8 @@ export class SearchResolver {
   @Query(() => [CatalogSearchItemPayload])
   analyticsCatalogSearch(
     @Args("workspaceId", { type: () => ID }) workspaceId: string,
-    @Args("text", { nullable: true }) text: string | undefined,
-    @Args("lifecycle", { nullable: true }) lifecycle: string | undefined,
+    @Args("text", { type: () => String, nullable: true }) text: string | undefined,
+    @Args("lifecycle", { type: () => String, nullable: true }) lifecycle: string | undefined,
     @TenantId() organizationId: string | undefined,
   ): Promise<CatalogSearchItemPayload[]> {
     return this.search.catalog(
@@ -311,7 +311,7 @@ export class SearchResolver {
     @Args("workspaceId", { type: () => ID }) workspaceId: string,
     @Args("sourceId", { type: () => ID, nullable: true })
     sourceId: string | undefined,
-    @Args("lifecycle", { nullable: true }) lifecycle: string | undefined,
+    @Args("lifecycle", { type: () => String, nullable: true }) lifecycle: string | undefined,
     @TenantId() organizationId: string | undefined,
   ): Promise<TrackingPlanSearchItemPayload[]> {
     return this.search.trackingPlans(
@@ -345,7 +345,7 @@ export class SearchResolver {
   @Query(() => [SavedSearchPayload])
   async analyticsSavedSearches(
     @Args("workspaceId", { type: () => ID }) workspaceId: string,
-    @Args("resourceType", { nullable: true })
+    @Args("resourceType", { type: () => String, nullable: true })
     resourceType: string | undefined,
     @TenantId() organizationId: string | undefined,
   ): Promise<SavedSearchPayload[]> {
