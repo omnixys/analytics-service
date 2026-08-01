@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ErrorCode, FrameworkException } from "@omnixys/contracts";
+import { ErrorCode, FrameworkException } from "@omnixys/contracts-ts";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { PrismaService } from "../prisma/prisma.service.js";
 import type { ApiKey, Environment } from "../prisma/generated/client.js";

@@ -5,15 +5,12 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["analytics"]
 }
 
 enum Environment {
   DEVELOPMENT
   STAGING
   PRODUCTION
-
-  @@schema("analytics")
 }
 
 enum Lifecycle {
@@ -21,8 +18,6 @@ enum Lifecycle {
   ACTIVE
   DEPRECATED
   ARCHIVED
-
-  @@schema("analytics")
 }
 
 enum TrackingMode {
@@ -30,8 +25,6 @@ enum TrackingMode {
   WARN
   QUARANTINE
   REJECT
-
-  @@schema("analytics")
 }
 
 enum JobStatus {
@@ -41,31 +34,23 @@ enum JobStatus {
   FAILED
   CANCELED
   PAUSED
-
-  @@schema("analytics")
 }
 
 enum ScheduleMisfirePolicy {
   SKIP
   FIRE_ONCE
   CATCH_UP
-
-  @@schema("analytics")
 }
 
 enum ScheduleConcurrencyPolicy {
   ALLOW
   FORBID
   REPLACE
-
-  @@schema("analytics")
 }
 
 enum QuotaScope {
   ORGANIZATION
   WORKSPACE
-
-  @@schema("analytics")
 }
 
 model Organization {
@@ -78,7 +63,6 @@ model Organization {
   workspaces Workspace[]
 
   @@map("organization")
-  @@schema("analytics")
 }
 
 model Workspace {
@@ -95,7 +79,6 @@ model Workspace {
   @@unique([organizationId, slug])
   @@index([organizationId])
   @@map("workspace")
-  @@schema("analytics")
 }
 
 model Source {
@@ -114,7 +97,6 @@ model Source {
   @@unique([workspaceId, slug])
   @@index([organizationId, workspaceId])
   @@map("source")
-  @@schema("analytics")
 }
 
 model Membership {
@@ -130,7 +112,6 @@ model Membership {
   @@unique([organizationId, workspaceId, subjectId])
   @@index([subjectId, active])
   @@map("membership")
-  @@schema("analytics")
 }
 
 model ApiKey {
@@ -152,7 +133,6 @@ model ApiKey {
 
   @@index([organizationId, workspaceId, sourceId])
   @@map("api_key")
-  @@schema("analytics")
 }
 
 model EventDefinition {
@@ -174,7 +154,6 @@ model EventDefinition {
   @@unique([sourceId, environment, name])
   @@index([organizationId, workspaceId, lifecycle])
   @@map("event_definition")
-  @@schema("analytics")
 }
 
 model EventSchemaVersion {
@@ -191,7 +170,6 @@ model EventSchemaVersion {
 
   @@unique([eventDefinitionId, version])
   @@map("event_schema_version")
-  @@schema("analytics")
 }
 
 model TrackingPlan {
@@ -210,7 +188,6 @@ model TrackingPlan {
   @@unique([sourceId, environment])
   @@index([organizationId, workspaceId])
   @@map("tracking_plan")
-  @@schema("analytics")
 }
 
 model TrackingPlanVersion {
@@ -226,7 +203,6 @@ model TrackingPlanVersion {
 
   @@unique([trackingPlanId, version])
   @@map("tracking_plan_version")
-  @@schema("analytics")
 }
 
 model RawEvent {
@@ -260,7 +236,6 @@ model RawEvent {
   @@index([userId, occurredAt])
   @@index([sessionId, occurredAt])
   @@map("raw_event")
-  @@schema("analytics")
 }
 
 model QuarantinedEvent {
@@ -278,7 +253,6 @@ model QuarantinedEvent {
   @@index([organizationId, workspaceId, createdAt])
   @@index([sourceId, environment, eventId])
   @@map("quarantined_event")
-  @@schema("analytics")
 }
 
 model DomainEventQuarantine {
@@ -298,7 +272,6 @@ model DomainEventQuarantine {
   @@index([topic, createdAt])
   @@index([tenantId, createdAt])
   @@map("domain_event_quarantine")
-  @@schema("analytics")
 }
 
 model Identity {
@@ -314,7 +287,6 @@ model Identity {
   @@unique([workspaceId, canonicalId])
   @@index([organizationId, workspaceId])
   @@map("identity")
-  @@schema("analytics")
 }
 
 model IdentityAlias {
@@ -328,7 +300,6 @@ model IdentityAlias {
   @@unique([workspaceId, previousId])
   @@index([workspaceId, canonicalId])
   @@map("identity_alias")
-  @@schema("analytics")
 }
 
 model Session {
@@ -347,7 +318,6 @@ model Session {
   @@index([organizationId, workspaceId, startedAt])
   @@index([userId, startedAt])
   @@map("session")
-  @@schema("analytics")
 }
 
 model MetricDefinition {
@@ -366,7 +336,6 @@ model MetricDefinition {
   @@unique([workspaceId, key])
   @@index([organizationId, workspaceId, lifecycle])
   @@map("metric_definition")
-  @@schema("analytics")
 }
 
 model MetricVersion {
@@ -382,7 +351,6 @@ model MetricVersion {
 
   @@unique([metricDefinitionId, version])
   @@map("metric_version")
-  @@schema("analytics")
 }
 
 model AggregateBucket {
@@ -411,7 +379,6 @@ model AggregateBucket {
   @@unique([metricVersionId, bucketStart, bucketSize, dimensionKey])
   @@index([organizationId, workspaceId, bucketStart])
   @@map("aggregate_bucket")
-  @@schema("analytics")
 }
 
 model AggregateDistinctValue {
@@ -424,7 +391,6 @@ model AggregateDistinctValue {
 
   @@unique([aggregateBucketId, valueHash])
   @@map("aggregate_distinct_value")
-  @@schema("analytics")
 }
 
 model KpiDefinition {
@@ -443,7 +409,6 @@ model KpiDefinition {
   @@unique([workspaceId, key])
   @@index([organizationId, workspaceId, lifecycle])
   @@map("kpi_definition")
-  @@schema("analytics")
 }
 
 model KpiVersion {
@@ -461,7 +426,6 @@ model KpiVersion {
 
   @@unique([kpiDefinitionId, version])
   @@map("kpi_version")
-  @@schema("analytics")
 }
 
 model MaterializedViewState {
@@ -476,7 +440,6 @@ model MaterializedViewState {
 
   @@unique([workspaceId, viewKey])
   @@map("materialized_view_state")
-  @@schema("analytics")
 }
 
 model SavedSearch {
@@ -494,7 +457,6 @@ model SavedSearch {
   @@unique([workspaceId, resourceType, name])
   @@index([organizationId, workspaceId, resourceType, lifecycle])
   @@map("saved_search")
-  @@schema("analytics")
 }
 
 model DataAsset {
@@ -510,7 +472,6 @@ model DataAsset {
 
   @@unique([workspaceId, type, key])
   @@map("data_asset")
-  @@schema("analytics")
 }
 
 model DataAssetVersion {
@@ -526,7 +487,6 @@ model DataAssetVersion {
 
   @@unique([dataAssetId, version])
   @@map("data_asset_version")
-  @@schema("analytics")
 }
 
 model LineageEdge {
@@ -541,7 +501,6 @@ model LineageEdge {
   @@unique([inputVersionId, outputVersionId, transformationId])
   @@index([organizationId, workspaceId])
   @@map("lineage_edge")
-  @@schema("analytics")
 }
 
 model ProcessingRun {
@@ -562,7 +521,6 @@ model ProcessingRun {
 
   @@index([organizationId, workspaceId, createdAt])
   @@map("processing_run")
-  @@schema("analytics")
 }
 
 model LineageRun {
@@ -588,7 +546,6 @@ model LineageRun {
   @@unique([workspaceId, runKey])
   @@index([organizationId, workspaceId, watermark])
   @@map("lineage_run")
-  @@schema("analytics")
 }
 
 model LineageRunInput {
@@ -603,7 +560,6 @@ model LineageRunInput {
 
   @@unique([lineageRunId, assetVersionId])
   @@map("lineage_run_input")
-  @@schema("analytics")
 }
 
 model LineageRunOutput {
@@ -617,7 +573,6 @@ model LineageRunOutput {
 
   @@unique([lineageRunId, assetVersionId])
   @@map("lineage_run_output")
-  @@schema("analytics")
 }
 
 model RuleSet {
@@ -634,7 +589,6 @@ model RuleSet {
 
   @@index([organizationId, workspaceId, lifecycle])
   @@map("rule_set")
-  @@schema("analytics")
 }
 
 model RuleVersion {
@@ -654,7 +608,6 @@ model RuleVersion {
 
   @@unique([ruleSetId, version])
   @@map("rule_version")
-  @@schema("analytics")
 }
 
 model RuleExecution {
@@ -676,7 +629,6 @@ model RuleExecution {
   @@index([organizationId, workspaceId, startedAt])
   @@index([ruleSetId, eventId])
   @@map("rule_execution")
-  @@schema("analytics")
 }
 
 model Audience {
@@ -693,7 +645,6 @@ model Audience {
 
   @@index([organizationId, workspaceId, lifecycle])
   @@map("audience")
-  @@schema("analytics")
 }
 
 model AudienceMember {
@@ -711,7 +662,6 @@ model AudienceMember {
   @@unique([audienceId, subjectId])
   @@index([organizationId, workspaceId, subjectId])
   @@map("audience_member")
-  @@schema("analytics")
 }
 
 model AlertRule {
@@ -727,7 +677,6 @@ model AlertRule {
 
   @@index([organizationId, workspaceId, lifecycle])
   @@map("alert_rule")
-  @@schema("analytics")
 }
 
 model AlertIncident {
@@ -743,7 +692,6 @@ model AlertIncident {
 
   @@index([organizationId, workspaceId, status, openedAt])
   @@map("alert_incident")
-  @@schema("analytics")
 }
 
 model PluginDefinition {
@@ -758,7 +706,6 @@ model PluginDefinition {
 
   @@index([organizationId, workspaceId, lifecycle])
   @@map("plugin_definition")
-  @@schema("analytics")
 }
 
 model WebhookEndpoint {
@@ -773,7 +720,6 @@ model WebhookEndpoint {
 
   @@index([organizationId, workspaceId, active])
   @@map("webhook_endpoint")
-  @@schema("analytics")
 }
 
 model Schedule {
@@ -801,7 +747,6 @@ model Schedule {
   @@index([active, nextRunAt])
   @@index([organizationId, workspaceId])
   @@map("schedule")
-  @@schema("analytics")
 }
 
 model ScheduleRun {
@@ -824,7 +769,6 @@ model ScheduleRun {
   @@unique([scheduleId, scheduledFor])
   @@index([status, nextRetryAt])
   @@map("schedule_run")
-  @@schema("analytics")
 }
 
 model UsageRecord {
@@ -839,7 +783,6 @@ model UsageRecord {
 
   @@index([organizationId, workspaceId, meter, occurredAt])
   @@map("usage_record")
-  @@schema("analytics")
 }
 
 model UsageBucket {
@@ -855,7 +798,6 @@ model UsageBucket {
 
   @@unique([organizationId, workspaceId, meter, bucketStart, bucketSize])
   @@map("usage_bucket")
-  @@schema("analytics")
 }
 
 model QuotaDefinition {
@@ -869,7 +811,6 @@ model QuotaDefinition {
   assignments QuotaAssignment[]
 
   @@map("quota_definition")
-  @@schema("analytics")
 }
 
 model QuotaAssignment {
@@ -889,7 +830,6 @@ model QuotaAssignment {
   @@unique([quotaDefinitionId, organizationId, workspaceId])
   @@index([organizationId, workspaceId])
   @@map("quota_assignment")
-  @@schema("analytics")
 }
 
 model QuotaViolation {
@@ -904,7 +844,6 @@ model QuotaViolation {
 
   @@index([organizationId, workspaceId, occurredAt])
   @@map("quota_violation")
-  @@schema("analytics")
 }
 
 model ImportJob {
@@ -925,7 +864,6 @@ model ImportJob {
 
   @@index([organizationId, workspaceId, createdAt])
   @@map("import_job")
-  @@schema("analytics")
 }
 
 model ExportJob {
@@ -944,7 +882,6 @@ model ExportJob {
 
   @@index([organizationId, workspaceId, createdAt])
   @@map("export_job")
-  @@schema("analytics")
 }
 
 model ReplayJob {
@@ -965,7 +902,6 @@ model ReplayJob {
 
   @@index([organizationId, workspaceId, createdAt])
   @@map("replay_job")
-  @@schema("analytics")
 }
 
 model ReplayItem {
@@ -986,7 +922,6 @@ model ReplayItem {
   @@unique([replayJobId, eventId, occurredAt])
   @@index([organizationId, workspaceId, status])
   @@map("replay_item")
-  @@schema("analytics")
 }
 
 model DeadLetterReference {
@@ -1008,7 +943,6 @@ model DeadLetterReference {
   @@unique([topic, partition, offset])
   @@index([organizationId, workspaceId, firstFailedAt])
   @@map("dead_letter_reference")
-  @@schema("analytics")
 }
 
 model Dashboard {
@@ -1023,7 +957,6 @@ model Dashboard {
 
   @@index([organizationId, workspaceId, lifecycle])
   @@map("dashboard")
-  @@schema("analytics")
 }
 
 model Report {
@@ -1038,7 +971,6 @@ model Report {
 
   @@index([organizationId, workspaceId, lifecycle])
   @@map("report")
-  @@schema("analytics")
 }
 
 model FeatureFlag {
@@ -1057,7 +989,6 @@ model FeatureFlag {
   @@unique([workspaceId, key])
   @@index([organizationId, workspaceId, lifecycle])
   @@map("feature_flag")
-  @@schema("analytics")
 }
 
 model FeatureFlagVersion {
@@ -1072,7 +1003,6 @@ model FeatureFlagVersion {
 
   @@unique([flagId, version])
   @@map("feature_flag_version")
-  @@schema("analytics")
 }
 
 model FeatureFlagExposure {
@@ -1095,7 +1025,6 @@ model FeatureFlagExposure {
   @@index([organizationId, workspaceId, flagId, occurredAt])
   @@index([subjectId, occurredAt])
   @@map("feature_flag_exposure")
-  @@schema("analytics")
 }
 
 model Experiment {
@@ -1112,7 +1041,6 @@ model Experiment {
 
   @@unique([workspaceId, key])
   @@map("experiment")
-  @@schema("analytics")
 }
 
 model AuditEntry {
@@ -1134,5 +1062,4 @@ model AuditEntry {
   @@index([actorId, occurredAt])
   @@index([resourceType, resourceId])
   @@map("audit_entry")
-  @@schema("analytics")
 }

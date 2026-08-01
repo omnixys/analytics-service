@@ -1,7 +1,7 @@
 import {
   AnalyticsProcessingEventSchema,
   type AnalyticsProcessingEvent,
-} from "@omnixys/contracts/analytics";
+} from "@omnixys/contracts-ts/analytics";
 import { Injectable } from "@nestjs/common";
 
 @Injectable()

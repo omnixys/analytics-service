@@ -3,7 +3,7 @@ import {
   MetricQueryDefinitionSchema,
   type KpiExpression,
   type MetricQueryDefinition,
-} from "@omnixys/contracts/analytics";
+} from "@omnixys/contracts-ts/analytics";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service.js";
 

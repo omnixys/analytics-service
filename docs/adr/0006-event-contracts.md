@@ -7,7 +7,7 @@ Unkontrollierte Events führen zu unzuverlässigen KPIs und unbekannter
 Datenschutzklassifikation.
 
 ## Decision
-`@omnixys/contracts/analytics` definiert Envelope und Kernschemata. Versionierte
+`@omnixys/contracts-ts/analytics` definiert Envelope und Kernschemata. Versionierte
 Eventdefinitionen und Tracking Plans entscheiden zwischen warn, quarantine und
 reject. Aktive Versionen sind unveränderlich.
 

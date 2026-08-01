@@ -15,7 +15,7 @@ Synchrone Datenbank-Persistenz koppelt API-Latenz an Downstream-Arbeit.
 
 ## Consequences
 Consumer sind at-least-once-fest, idempotent und offset-bewusst. Retry, DLQ und
-Replay verwenden `@omnixys/kafka`.
+Replay verwenden `@omnixys/kafka-ts`.
 
 ## Security
 Topics tragen verifizierte Tenant-Metadaten; Payloads dürfen keine Secrets

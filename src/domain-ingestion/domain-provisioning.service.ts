@@ -1,4 +1,4 @@
-import type { AnalyticsProducer } from "@omnixys/contracts/analytics";
+import type { AnalyticsProducer } from "@omnixys/contracts-ts/analytics";
 import { Injectable } from "@nestjs/common";
 import type { Environment } from "../prisma/generated/client.js";
 import { PrismaService } from "../prisma/prisma.service.js";

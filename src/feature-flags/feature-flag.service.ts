@@ -1,11 +1,11 @@
-import { ValkeyService } from "@omnixys/cache";
+import { ValkeyService } from "@omnixys/cache-ts";
 import {
   FeatureFlagDefinitionSchema,
   FeatureFlagEvaluationRequestSchema,
   type FeatureFlagDefinition,
   type FeatureFlagEvaluationResponse,
-} from "@omnixys/contracts/analytics";
-import { KafkaProducerService, KafkaTopics } from "@omnixys/kafka";
+} from "@omnixys/contracts-ts/analytics";
+import { KafkaProducerService, KafkaTopics } from "@omnixys/kafka-ts";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import type { Prisma } from "../prisma/generated/client.js";

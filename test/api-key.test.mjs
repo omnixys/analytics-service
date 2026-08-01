@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { FrameworkException } from "@omnixys/contracts";
+import { FrameworkException } from "@omnixys/contracts-ts";
 import { ApiKeyService } from "../dist/api-key/api-key.service.js";
 
 const RAW_KEY = "omx_live.correct-horse-battery-staple";

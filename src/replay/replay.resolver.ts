@@ -1,9 +1,9 @@
-import { TenantId } from "@omnixys/context";
+import { TenantId } from "@omnixys/context-ts";
 import {
   CookieAuthGuard,
   CurrentUser,
   type CurrentUserData,
-} from "@omnixys/security";
+} from "@omnixys/security-ts";
 import { ForbiddenException, UseGuards } from "@nestjs/common";
 import {
   Args,

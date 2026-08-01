@@ -19,7 +19,7 @@ Jobs sind pausierbar, wiederaufnehmbar, rate-limited und auditiert; betroffene
 Rollups werden gezielt neu berechnet.
 
 ## Security
-Uploads nutzen `@omnixys/media`, Malware-/Formatprüfung, Tenantbindung,
+Uploads nutzen `@omnixys/media-ts`, Malware-/Formatprüfung, Tenantbindung,
 Idempotenz und kurze Zugriffstokens.
 
 ## Migration and review trigger

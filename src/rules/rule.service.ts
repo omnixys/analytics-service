@@ -1,7 +1,7 @@
 import {
   AnalyticsRuleSetSchema,
   type AnalyticsRuleSet,
-} from "@omnixys/contracts/analytics";
+} from "@omnixys/contracts-ts/analytics";
 import {
   BadRequestException,
   Injectable,

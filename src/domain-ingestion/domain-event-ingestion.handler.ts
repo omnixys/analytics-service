@@ -2,7 +2,7 @@ import {
   KafkaEvent,
   KafkaEventHandler,
   type IKafkaEventContext,
-} from "@omnixys/kafka";
+} from "@omnixys/kafka-ts";
 import { Injectable } from "@nestjs/common";
 import { DOMAIN_EVENT_TOPICS } from "./domain-event-mapping.registry.js";
 import { DomainEventIngestionService } from "./domain-event-ingestion.service.js";

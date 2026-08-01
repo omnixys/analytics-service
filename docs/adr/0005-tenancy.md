@@ -8,7 +8,7 @@ Isolation. `tenantId` ist bereits Plattformstandard.
 
 ## Decision
 `Organization.id` entspricht dem verifizierten `tenantId` aus
-`@omnixys/context`. Jede tenantfähige Zeile trägt Organization und erforderliche
+`@omnixys/context-ts`. Jede tenantfähige Zeile trägt Organization und erforderliche
 Unterebenen; PostgreSQL RLS ergänzt Applikationsfilter.
 
 ## Alternatives

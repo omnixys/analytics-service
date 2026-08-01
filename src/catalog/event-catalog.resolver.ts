@@ -1,6 +1,6 @@
 import { ForbiddenException, UseGuards } from "@nestjs/common";
-import { TenantId } from "@omnixys/context";
-import { CookieAuthGuard } from "@omnixys/security";
+import { TenantId } from "@omnixys/context-ts";
+import { CookieAuthGuard } from "@omnixys/security-ts";
 import { Args, Field, ID, ObjectType, Query, Resolver } from "@nestjs/graphql";
 import { PrismaService } from "../prisma/prisma.service.js";
 

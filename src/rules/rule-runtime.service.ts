@@ -1,12 +1,12 @@
-import { ValkeyService } from "@omnixys/cache";
+import { ValkeyService } from "@omnixys/cache-ts";
 import {
   AnalyticsRuleSetSchema,
   type AnalyticsProcessingEvent,
   type AnalyticsResourceEvent,
   type AnalyticsRuleSet,
-} from "@omnixys/contracts/analytics";
+} from "@omnixys/contracts-ts/analytics";
 import { evaluateRule } from "@omnixys/analytics-rule-engine";
-import { KafkaProducerService, KafkaTopics } from "@omnixys/kafka";
+import { KafkaProducerService, KafkaTopics } from "@omnixys/kafka-ts";
 import { Injectable } from "@nestjs/common";
 import type { Prisma, RuleVersion } from "../prisma/generated/client.js";
 import { PrismaService } from "../prisma/prisma.service.js";

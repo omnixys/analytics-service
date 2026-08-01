@@ -4,12 +4,12 @@ import {
   type AnalyticsBatchResponse,
   type AnalyticsEvent,
   type AnalyticsProcessingEvent,
-} from "@omnixys/contracts/analytics";
+} from "@omnixys/contracts-ts/analytics";
 import {
   KafkaProducerService,
   KafkaTopics,
   type KafkaEventType,
-} from "@omnixys/kafka";
+} from "@omnixys/kafka-ts";
 import { BadRequestException, Injectable } from "@nestjs/common";
 import {
   ApiKeyService,

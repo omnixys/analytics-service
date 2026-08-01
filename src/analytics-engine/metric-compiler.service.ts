@@ -2,7 +2,7 @@ import {
   MetricQueryDefinitionSchema,
   type AnalyticsEvent,
   type MetricQueryDefinition,
-} from "@omnixys/contracts/analytics";
+} from "@omnixys/contracts-ts/analytics";
 import { evaluateRule } from "@omnixys/analytics-rule-engine";
 import { Injectable } from "@nestjs/common";
 

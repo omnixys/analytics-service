@@ -1,11 +1,11 @@
-import type { AnalyticsProcessingEvent } from "@omnixys/contracts/analytics";
+import type { AnalyticsProcessingEvent } from "@omnixys/contracts-ts/analytics";
 import {
   KafkaProducerService,
   KafkaTopics,
   type IKafkaEventContext,
-} from "@omnixys/kafka";
+} from "@omnixys/kafka-ts";
 import { Injectable } from "@nestjs/common";
-import { TraceRunner } from "@omnixys/observability";
+import { TraceRunner } from "@omnixys/observability-ts";
 import { DataQualityService } from "../catalog/data-quality.service.js";
 import type { Environment, Prisma } from "../prisma/generated/client.js";
 import { PrismaService } from "../prisma/prisma.service.js";

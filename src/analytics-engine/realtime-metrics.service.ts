@@ -1,4 +1,4 @@
-import { ValkeyService } from "@omnixys/cache";
+import { ValkeyService } from "@omnixys/cache-ts";
 import { Injectable } from "@nestjs/common";
 
 const SUPPORTED_WINDOWS = [1, 5, 15, 60] as const;

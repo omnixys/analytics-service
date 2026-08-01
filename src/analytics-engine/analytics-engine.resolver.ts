@@ -1,13 +1,13 @@
 import {
   KpiDefinitionSchema,
   MetricQueryDefinitionSchema,
-} from "@omnixys/contracts/analytics";
-import { TenantId } from "@omnixys/context";
+} from "@omnixys/contracts-ts/analytics";
+import { TenantId } from "@omnixys/context-ts";
 import {
   CookieAuthGuard,
   CurrentUser,
   type CurrentUserData,
-} from "@omnixys/security";
+} from "@omnixys/security-ts";
 import {
   BadRequestException,
   ForbiddenException,

@@ -1,5 +1,5 @@
-import { ValkeyService } from "@omnixys/cache";
-import { KafkaLifecycleService } from "@omnixys/kafka";
+import { ValkeyService } from "@omnixys/cache-ts";
+import { KafkaLifecycleService } from "@omnixys/kafka-ts";
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service.js";
 

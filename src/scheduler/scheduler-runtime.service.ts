@@ -1,5 +1,5 @@
-import type { AnalyticsJobEvent } from "@omnixys/contracts/analytics";
-import { KafkaProducerService, KafkaTopics } from "@omnixys/kafka";
+import type { AnalyticsJobEvent } from "@omnixys/contracts-ts/analytics";
+import { KafkaProducerService, KafkaTopics } from "@omnixys/kafka-ts";
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "../prisma/generated/client.js";
 import { PrismaService } from "../prisma/prisma.service.js";
@@ -147,7 +147,7 @@ export class SchedulerRuntimeService {
           concurrency_policy AS "concurrencyPolicy",
           next_run_at AS "nextRunAt",
           end_at AS "endAt"
-        FROM analytics.schedule
+        FROM schedule
         WHERE active = true
           AND next_run_at <= ${now}
           AND (start_at IS NULL OR start_at <= ${now})

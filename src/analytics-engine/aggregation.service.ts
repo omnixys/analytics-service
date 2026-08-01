@@ -1,7 +1,7 @@
 import type {
   AnalyticsProcessingEvent,
   MetricQueryDefinition,
-} from "@omnixys/contracts/analytics";
+} from "@omnixys/contracts-ts/analytics";
 import { Injectable } from "@nestjs/common";
 import { createHash } from "node:crypto";
 import type { Prisma } from "../prisma/generated/client.js";

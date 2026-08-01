@@ -2,7 +2,7 @@ import {
   FeatureFlagDefinitionSchema,
   type FeatureFlagDefinition,
   type FeatureFlagEvaluation,
-} from "@omnixys/contracts/analytics";
+} from "@omnixys/contracts-ts/analytics";
 import { evaluateRule } from "@omnixys/analytics-rule-engine";
 import { createHash } from "node:crypto";
 

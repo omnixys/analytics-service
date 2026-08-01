@@ -6,7 +6,7 @@ import {
   HttpStatus,
   Post,
 } from "@nestjs/common";
-import type { FeatureFlagEvaluationResponse } from "@omnixys/contracts/analytics";
+import type { FeatureFlagEvaluationResponse } from "@omnixys/contracts-ts/analytics";
 import { FeatureFlagKeyService } from "./feature-flag-key.service.js";
 import { FeatureFlagService } from "./feature-flag.service.js";
 

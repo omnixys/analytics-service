@@ -1,6 +1,6 @@
 import { UseGuards } from "@nestjs/common";
 import { Field, Int, ObjectType, Query, Resolver } from "@nestjs/graphql";
-import { CookieAuthGuard } from "@omnixys/security";
+import { CookieAuthGuard } from "@omnixys/security-ts";
 import { ProcessingMetricsService } from "./processing-metrics.service.js";
 
 @ObjectType()

@@ -1,9 +1,9 @@
-import type { AnalyticsJobEvent } from "@omnixys/contracts/analytics";
+import type { AnalyticsJobEvent } from "@omnixys/contracts-ts/analytics";
 import {
   KafkaEvent,
   KafkaEventHandler,
   KafkaTopics,
-} from "@omnixys/kafka";
+} from "@omnixys/kafka-ts";
 import { Injectable } from "@nestjs/common";
 import { SchedulerRuntimeService } from "./scheduler-runtime.service.js";
 

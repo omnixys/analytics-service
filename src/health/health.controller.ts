@@ -14,12 +14,12 @@ export class HealthController {
     return { status: "ok", service: "analytics" };
   }
 
-  @Get("live")
+  @Get("liveness")
   live(): { status: "ok" } {
     return { status: "ok" };
   }
 
-  @Get("ready")
+  @Get("readiness")
   async ready(): Promise<{
     status: "ready";
     checks: { postgres: boolean; kafka: boolean; valkey: boolean };

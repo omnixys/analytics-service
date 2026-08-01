@@ -1,37 +1,130 @@
-# Build from the Omnixys checkout root:
-# docker build -f services/analytics-service/Dockerfile .
-FROM node:22-bookworm-slim AS build
-WORKDIR /workspace
-RUN corepack enable
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# For more information, visit <https://www.gnu.org/licenses/>.
+# ---------------------------------------------------------------------------------------
+# Dockerfile – Omnixys Authentication Service
+# Multi-stage build optimized for security, reproducibility, and minimal runtime size.
+# ---------------------------------------------------------------------------------------
+# syntax=docker/dockerfile:1.14.0
 
-COPY packages/ts ./packages/ts
-COPY services/analytics-service ./services/analytics-service
+ARG NODE_VERSION=25.8.2
 
-RUN for package in \
-      contracts context logger observability security cache graphql http kafka analytics-rule-engine; do \
-      pnpm --dir "/workspace/packages/ts/$package" install --frozen-lockfile; \
-      pnpm --dir "/workspace/packages/ts/$package" run build; \
-    done
+# ---------------------------------------------------------------------------------------
+# Stage 0: Base image
+# - Common setup for all later build stages.
+# - Corepack is enabled to support pnpm package manager.
+# ---------------------------------------------------------------------------------------
+FROM node:${NODE_VERSION}-bookworm-slim AS base
+WORKDIR /home/node
+RUN npm install -g pnpm@10.33.0
 
-WORKDIR /workspace/services/analytics-service
-RUN pnpm install --frozen-lockfile \
-  && pnpm run prisma:generate \
-  && pnpm run build \
-  && pnpm prune --prod
+# ---------------------------------------------------------------------------------------
+# Stage 1: Build (dist)
+# - Installs all dependencies (including dev) and compiles the TypeScript project.
+# - Result: ./dist folder containing compiled JS files.
+# ---------------------------------------------------------------------------------------
+FROM base AS dist
+COPY --chown=node:node package.json pnpm-lock.yaml ./
 
-RUN find /workspace/packages/ts -name node_modules -type d -prune -exec rm -rf '{}' '+'
+RUN --mount=type=secret,id=omnixys_token \
+    TOKEN=$(cat /run/secrets/omnixys_token) && \
+    echo "@omnixys:registry=https://npm.pkg.github.com" > .npmrc && \
+    echo "//npm.pkg.github.com/:_authToken=${TOKEN}" >> .npmrc && \
+    pnpm install --frozen-lockfile --ignore-scripts
 
-FROM node:22-bookworm-slim AS runtime
-ENV NODE_ENV=production
-WORKDIR /workspace/services/analytics-service
-RUN groupadd --system analytics && useradd --system --gid analytics analytics
-COPY --from=build --chown=analytics:analytics /workspace/packages/ts /workspace/packages/ts
-COPY --from=build --chown=analytics:analytics /workspace/services/analytics-service/package.json ./
-COPY --from=build --chown=analytics:analytics /workspace/services/analytics-service/node_modules ./node_modules
-COPY --from=build --chown=analytics:analytics /workspace/services/analytics-service/dist ./dist
-RUN ln -s /workspace/services/analytics-service/node_modules /workspace/node_modules
-USER analytics
-EXPOSE 7410 9470
-HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:7410/health/live').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
-CMD ["node", "dist/main.js"]
+COPY --chown=node:node . .
+ENV CI=true
+RUN pnpm run build
+
+# ---------------------------------------------------------------------------------------
+# Stage 2: Production dependencies
+# - Installs only production dependencies to keep image small.
+# - No dev packages or build tools are included.
+# ---------------------------------------------------------------------------------------
+FROM base AS dependencies
+
+COPY --chown=node:node package.json pnpm-lock.yaml ./
+
+RUN --mount=type=secret,id=omnixys_token \
+    TOKEN=$(cat /run/secrets/omnixys_token) && \
+    echo "@omnixys:registry=https://npm.pkg.github.com" > .npmrc && \
+    echo "//npm.pkg.github.com/:_authToken=${TOKEN}" >> .npmrc && \
+    pnpm install --frozen-lockfile --ignore-scripts
+
+# ---------------------------------------------------------------------------------------
+# Stage 3: Final runtime image
+# - Copies only compiled code and production node_modules.
+# - Runs the app as a non-root user for security.
+# ---------------------------------------------------------------------------------------
+FROM node:${NODE_VERSION}-bookworm-slim AS final
+
+# ----- Build-time arguments -----
+ARG NODE_VERSION
+ARG APP_NAME
+ARG APP_VERSION
+ARG CREATED
+ARG REVISION
+
+# ----- Image metadata (OCI compliant) -----
+LABEL org.opencontainers.image.title="${APP_NAME}-service" \
+      org.opencontainers.image.description="Omnixys ${APP_NAME}-service – Node.js ${NODE_VERSION}, built with TypeScript, version ${APP_VERSION}, based on Debian Bookworm." \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.licenses="GPL-3.0-or-later" \
+      org.opencontainers.image.vendor="Omnixys Technologies" \
+      org.opencontainers.image.authors="caleb.gyamfi@omnixys.com" \
+      org.opencontainers.image.base.name="node:${NODE_VERSION}-bookworm-slim" \
+      org.opencontainers.image.url="https://github.com/omnixys/${APP_NAME}-service" \
+      org.opencontainers.image.source="https://github.com/omnixys/${APP_NAME}-service" \
+      org.opencontainers.image.created="${CREATED}" \
+      org.opencontainers.image.revision="${REVISION}" \
+      org.opencontainers.image.documentation="https://github.com/omnixys/${APP_NAME}-service/blob/main/README.md"
+
+# ----- Set working directory -----
+WORKDIR /opt/app
+
+# ----- Environment configuration -----
+# NODE_ENV=production ensures that dev dependencies are ignored and improves runtime performance.
+# TZ=UTC ensures consistent timestamps across environments.
+ENV NODE_ENV=production TZ=UTC
+
+# ----- Install required system packages -----
+# dumb-init: lightweight init system for proper signal handling.
+# wget + ca-certificates: used for health checks and secure HTTPS.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends dumb-init wget ca-certificates && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* && \
+    mkdir -p /opt/app/log && chown -R node:node /opt/app
+
+# ----- Enable pnpm (runtime) -----
+RUN npm install -g pnpm@10.33.0
+
+# ----- Switch to non-root user -----
+USER node
+
+# ----- Copy built artifacts and dependencies -----
+COPY --from=dependencies --chown=node:node /home/node/node_modules ./node_modules
+COPY --from=dist --chown=node:node /home/node/dist ./dist
+COPY --chown=node:node package.json ./
+
+# ----- Expose application port (per Omnixys port conventions) -----
+EXPOSE 3000
+
+# ----- Healthcheck -----
+# Ensures that Docker and orchestration systems (e.g., Kubernetes) can detect unhealthy containers.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+  CMD wget -qO- http://localhost:3000/health || exit 1
+
+# ----- Start command -----
+# dumb-init ensures proper signal forwarding and zombie process cleanup.
+ENTRYPOINT ["dumb-init", "node", "dist/main.js"]

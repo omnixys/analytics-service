@@ -16,7 +16,7 @@ POST /v1/analytics/batch
 ```
 
 Invalid fachliche Events werden quarantänisiert. Technische Fehler werden durch
-die vorhandene `@omnixys/kafka` Retry Policy mit exponentiellem Retry und DLQ
+die vorhandene `@omnixys/kafka-ts` Retry Policy mit exponentiellem Retry und DLQ
 behandelt. Datenbank-Unique-Constraints ergänzen die Kafka-Idempotenz.
 
 ## Replay
@@ -35,7 +35,7 @@ prozesslokale Outcome- und Latenzmetriken für Operations bereit.
 
 ## Resilience ownership
 
-- Retry, DLQ, Circuit Breaker und Consumer-Idempotenz: `@omnixys/kafka`
+- Retry, DLQ, Circuit Breaker und Consumer-Idempotenz: `@omnixys/kafka-ts`
 - fachliche Idempotenz und Processing Runs: PostgreSQL
 - Quarantine und Replay Queue: `analytics-service`
-- kanonische Event- und Replay-Envelopes: `@omnixys/contracts/analytics`
+- kanonische Event- und Replay-Envelopes: `@omnixys/contracts-ts/analytics`

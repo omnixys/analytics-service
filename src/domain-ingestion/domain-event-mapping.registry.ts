@@ -1,8 +1,8 @@
 import type {
   AnalyticsDomainEventName,
   AnalyticsProducer,
-} from "@omnixys/contracts/analytics";
-import { KafkaTopics, type KafkaEventRegistry } from "@omnixys/kafka";
+} from "@omnixys/contracts-ts/analytics";
+import { KafkaTopics, type KafkaEventRegistry } from "@omnixys/kafka-ts";
 
 export interface DomainEventMapping {
   readonly topic: string;

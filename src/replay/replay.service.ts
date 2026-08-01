@@ -2,8 +2,8 @@ import {
   AnalyticsEventContextSchema,
   type AnalyticsJobEvent,
   type AnalyticsProcessingEvent,
-} from "@omnixys/contracts/analytics";
-import { KafkaProducerService, KafkaTopics } from "@omnixys/kafka";
+} from "@omnixys/contracts-ts/analytics";
+import { KafkaProducerService, KafkaTopics } from "@omnixys/kafka-ts";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import type {
   Environment,

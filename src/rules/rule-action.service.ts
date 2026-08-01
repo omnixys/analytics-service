@@ -3,8 +3,8 @@ import type {
   AnalyticsRuleAction,
   AnalyticsResourceEvent,
   AnalyticsJobEvent,
-} from "@omnixys/contracts/analytics";
-import { KafkaProducerService, KafkaTopics } from "@omnixys/kafka";
+} from "@omnixys/contracts-ts/analytics";
+import { KafkaProducerService, KafkaTopics } from "@omnixys/kafka-ts";
 import { Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import type { Prisma } from "../prisma/generated/client.js";
