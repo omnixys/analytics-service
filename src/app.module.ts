@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ValkeyModule } from "@omnixys/cache-ts";
-import { ContextModule } from "@omnixys/context-ts";
+import { ContextModule, trustedProxyPolicyFromAddresses } from "@omnixys/context-ts";
 import { OmnixysGraphQLModule } from "@omnixys/graphql-ts";
 import { OmnixysHttpModule } from "@omnixys/http-ts";
 import { KafkaModule } from "@omnixys/kafka-ts";
@@ -31,20 +31,51 @@ import { RateLimitValkeyAdapterModule } from "./adapter/rate-limit/rate-limit-va
 const {
   SCHEMA_TARGET,
   SERVICE,
-  KAFKA_BROKER,
-  TEMPO_URI,
-  VALKEY_URL,
-  VALKEY_PASSWORD,
-  ENCRYPTION_KEY,
+  NODE_ENV,
+
   KC_URL,
   KC_REALM,
-  RATE_LIMIT_REQUESTS
+
+  KAFKA_BROKER,
+  KAFKA_IDEMPOTENCY_ENABLE,
+  KAFKA_IDEMPOTENCY_TTL,
+  KAFKA_RETRY,
+
+  OTEL_URI,
+  OTEL_TRANSPORT_MODE,
+  OTEL_SAMPLING_RATIO,
+  PROMETHEUS_ENABLE,
+  PROMETHEUS_PORT,
+
+  VALKEY_URL,
+  VALKEY_PASSWORD,
+
+  ENCRYPTION_KEY,
+  DEFAULT_TENANT_ID,
+
+  RATE_LIMIT_ENABLE,
+  RATE_LIMIT_REQUESTS,
+  RATE_LIMIT_WINDOW,
+
+  LOG_BATCH_ENABLE,
+  LOG_BATCH_FLUSH_INTERVAL,
+  LOG_BATCH_MAX_SIZE,
+
+  TRUSTED_PROXY_ADDRESSES,
 } = env;
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ContextModule.forRoot(),
+    ContextModule.forRoot({
+      tenant: {
+        mode: NODE_ENV === 'production' ? 'strict' : 'legacy',
+        ...(DEFAULT_TENANT_ID ? { defaultTenantId: DEFAULT_TENANT_ID } : {}),
+      },
+      trustedProxyPolicy: trustedProxyPolicyFromAddresses(
+        TRUSTED_PROXY_ADDRESSES,
+      ),
+    }),
     OmnixysHttpModule.forRoot({ serviceName: SERVICE }),
     ValkeyModule.forRoot({
       serviceName: SERVICE,
@@ -59,12 +90,14 @@ const {
         jwksUri: `${KC_URL}/realms/${KC_REALM}/protocol/openid-connect/certs`,
       },
       rateLimit: {
-        enabled: true,
+        enabled: RATE_LIMIT_ENABLE,
         defaultLimit: RATE_LIMIT_REQUESTS,
-        defaultWindowMs: 60000,
+        defaultWindowMs: RATE_LIMIT_WINDOW,
         imports: [RateLimitValkeyAdapterModule],
       },
-      hash: { encryptionKey: ENCRYPTION_KEY },
+      hash: { 
+        encryptionKey: ENCRYPTION_KEY,
+      },
     }),
 
     OmnixysGraphQLModule.forRoot({
@@ -79,32 +112,38 @@ const {
             ? false
             : { path: 'dist/schema.gql', federation: 2 },
     }),
-
     KafkaModule.forRoot({
       clientId: SERVICE,
       brokers: [KAFKA_BROKER],
-      groupId: `${SERVICE}-consumer`,
+      groupId: `${SERVICE}-group`,
       serviceName: SERVICE,
-      retry: { maxRetries: 5 },
-      idempotency: { enabled: true, ttlSeconds: 86_400 },
+      retry: { maxRetries: KAFKA_RETRY },
+      idempotency: { enabled: KAFKA_IDEMPOTENCY_ENABLE, ttlSeconds: KAFKA_IDEMPOTENCY_TTL },
     }),
+    
     ObservabilityModule.forRoot({
       serviceName: SERVICE,
+
       otel: {
-        endpoint: TEMPO_URI,
-        transport: "http",
-        samplingRatio: 1,
+        endpoint: OTEL_URI,
+        transport: OTEL_TRANSPORT_MODE as 'http' | 'grpc',
+        samplingRatio: OTEL_SAMPLING_RATIO,
       },
-      metrics: { enabled: true, port: 9470 },
+
+      metrics: {
+        port: PROMETHEUS_PORT,
+        enabled: PROMETHEUS_ENABLE,
+      },
     }),
+
     LoggerModule.forRoot({
       serviceName: SERVICE,
       registerGlobalInterceptor: true,
 
       batch: {
-        enabled: true,
-        maxSize: 50,
-        flushInterval: 2000,
+        enabled: LOG_BATCH_ENABLE,
+        maxSize: LOG_BATCH_MAX_SIZE,
+        flushInterval: LOG_BATCH_FLUSH_INTERVAL,
       },
     }),
     PrismaModule,

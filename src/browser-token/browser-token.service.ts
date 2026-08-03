@@ -5,6 +5,8 @@ import { PrismaService } from "../prisma/prisma.service.js";
 import type { IngestionPrincipal } from "../api-key/api-key.service.js";
 import { env } from "../config/env.js";
 
+const {BROWSER_TOKEN_SECRET } = env;
+
 interface BrowserTokenClaims {
   aud: "omnixys-analytics";
   iss: "analytics-service";
@@ -242,7 +244,7 @@ function verifySignature(token: string): BrowserTokenClaims {
 }
 
 function signatureFor(value: string): string {
-  return createHmac("sha256", env.BROWSER_TOKEN_SECRET)
+  return createHmac("sha256", BROWSER_TOKEN_SECRET)
     .update(value)
     .digest("base64url");
 }

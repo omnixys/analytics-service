@@ -3,17 +3,17 @@ import 'dotenv/config';
 import { isUUID } from 'class-validator';
 import { PrismaClient } from '../src/prisma/generated/client.js';
 
-const CHECKPOINT_TENANT_ID =
-  process.env.CHECKPOINT_TENANT_ID ??
-  'a738a3b6-c3c1-483f-926c-c25e18fd4ff2';
+const OMNIXYS_TENANT_ID =
+  process.env.DEFAULT_TENANT_ID ??
+  '6e788f7f-c233-4cb8-bbde-c0b855e564be';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const tenantIdValid = isUUID(CHECKPOINT_TENANT_ID, '4');
+  const tenantIdValid = isUUID(OMNIXYS_TENANT_ID, '4');
   const organization = await prisma.organization.findUnique({
-    where: { id: CHECKPOINT_TENANT_ID },
+    where: { id: OMNIXYS_TENANT_ID },
     select: { id: true },
   });
   const workspace = organization
@@ -70,7 +70,7 @@ async function main() {
     service: 'analytics',
     checks: [
       {
-        name: 'Checkpoint tenant id',
+        name: 'Omnixys tenant id',
         ok: tenantIdValid,
         count: tenantIdValid ? 1 : 0,
       },

@@ -5,9 +5,11 @@ import { DomainEventIngestionService } from "./domain-event-ingestion.service.js
 import { DomainProvisioningService } from "./domain-provisioning.service.js";
 import { env } from "../config/env.js";
 
+const { DOMAIN_INGESTION_ENABLED } = env;
+
 @Module({
   imports: [IngestionModule],
-  providers: env.DOMAIN_INGESTION_ENABLED
+  providers: DOMAIN_INGESTION_ENABLED
     ? [
         DomainEventIngestionHandler,
         DomainEventIngestionService,

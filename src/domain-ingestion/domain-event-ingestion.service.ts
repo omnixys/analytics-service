@@ -14,6 +14,9 @@ import {
   domainEventMapping,
 } from "./domain-event-mapping.registry.js";
 import { DomainProvisioningService } from "./domain-provisioning.service.js";
+import { env } from "../config/env.js";
+
+const { NODE_ENV } = env;
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -125,7 +128,7 @@ function canonicalEvent(
 }
 
 function runtimeEnvironment(value: string | undefined): Environment | undefined {
-  const normalized = (value ?? process.env.NODE_ENV ?? "development").toLowerCase();
+  const normalized = (value ?? NODE_ENV ?? "development").toLowerCase();
   if (normalized === "development") return "DEVELOPMENT";
   if (normalized === "staging") return "STAGING";
   if (normalized === "production") return "PRODUCTION";

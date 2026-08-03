@@ -34,6 +34,7 @@ import { OmnixysLogger } from '@omnixys/logger-ts';
 import { registerFastifyTracing } from '@omnixys/observability-ts';
 import 'reflect-metadata';
 
+const { COOKIE_SECRET } = env;
 /**
  * @file main.ts
  * @description Einstiegspunkt der Anwendung.
@@ -142,7 +143,7 @@ async function bootstrap(): Promise<void> {
   });
 
   await app.register(cookie, {
-    secret: env.COOKIE_SECRET,
+    secret: COOKIE_SECRET,
   });
 
   // ======================================================

@@ -11,6 +11,9 @@ import type { AnalyticsBatchResponse } from "@omnixys/contracts-ts/analytics";
 import { IngestionService } from "./ingestion.service.js";
 import { env } from "../config/env.js";
 
+
+const { CLIENT_INGESTION_ENABLED } = env;
+
 @Controller("v1/analytics")
 export class IngestionController {
   constructor(private readonly ingestion: IngestionService) {}
@@ -22,7 +25,7 @@ export class IngestionController {
     @Headers("origin") origin: string | undefined,
     @Body() body: unknown,
   ): Promise<AnalyticsBatchResponse> {
-    if (!env.CLIENT_INGESTION_ENABLED) {
+    if (CLIENT_INGESTION_ENABLED) {
       throw new ServiceUnavailableException({
         code: "CLIENT_INGESTION_DISABLED",
         message: "Client analytics ingestion is not enabled in this environment",

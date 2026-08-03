@@ -1,26 +1,3 @@
-/**
- * @license GPL-3.0-or-later
- * Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
- * For more information, visit <https://www.gnu.org/licenses/>.
- */
-
-/**
- * BannerService - Service zur Anzeige von Anwendungsinformationen und einem Startbanner.
- * BannerService
- * Dieser Service gibt beim Start der Anwendung ein Banner und wichtige Anwendungsinformationen aus.
- */
-
 import { env } from './env.js';
 import { nodeConfig } from './node.js';
 import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
@@ -30,38 +7,23 @@ import chalk from 'chalk';
 import { release, type, userInfo } from 'node:os';
 import process from 'node:process';
 
-/**
- * BannerService - Service zum Generieren und Ausgeben von Anwendungsinformationen sowie einem Banner.
- * Dieser Service wird beim Bootstrap der Anwendung verwendet, um sowohl ein benutzerdefiniertes Banner
- * als auch wichtige Systeminformationen auszugeben.
- */
 @Injectable()
 export class BannerService implements OnApplicationBootstrap {
   readonly #logger = getLogger(BannerService.name);
 
-  /**
-   * @description Wird beim Bootstrap der Anwendung ausgeführt, um Anwendungsinformationen und ein Banner auszugeben.
-   */
   onApplicationBootstrap(): void {
     const {
       host,
       nodeEnv,
       port,
-      tempo,
       protocoll,
       keysPath,
-      keycloak,
       logger,
       serviceName,
-      kafkaUri,
     } = nodeConfig;
 
-    const { KEYCLOAK_HEALTH_URL, TEMPO_HEALTH_URL, PROMETHEUS_HEALTH_URL } = env;
-
-    // Banner generieren und ausgeben
     this.#generateBanner(serviceName);
 
-    // Umgebungsinformationen mit Farben ausgeben
     this.#logger.info(chalk.green('=== Anwendungsinformationen ==='));
     this.#logger.info(chalk.cyan('Anwendungsname: ') + chalk.yellow(serviceName));
     this.#logger.info(chalk.cyan('Node.js-Version: ') + chalk.yellow(process.version));
@@ -81,33 +43,64 @@ export class BannerService implements OnApplicationBootstrap {
       this.#logger.info(chalk.cyan('Pretty Logging: ') + chalk.yellow(logger.logPretty));
       this.#logger.info(chalk.cyan('Custom Log Level: ') + chalk.yellow(logger.logLevel));
     }
-    this.#logger.info(chalk.green('==============KEYCLOAK==========='));
-    this.#logger.info(chalk.cyan('URI: ') + chalk.yellow(keycloak.url));
-    this.#logger.info(chalk.cyan('Realm: ') + chalk.yellow(keycloak.realm));
-    this.#logger.info(chalk.cyan('client: ') + chalk.yellow(keycloak.clientId));
-    this.#logger.info(chalk.cyan('Keys path: ') + chalk.yellow(keysPath));
-    this.#logger.info(chalk.green('==============HEALTH==========='));
-    this.#logger.info(chalk.cyan('Kycloak Health URI: ') + chalk.yellow(KEYCLOAK_HEALTH_URL));
-    this.#logger.info(chalk.cyan('Tempo Health URI: ') + chalk.yellow(TEMPO_HEALTH_URL));
-    this.#logger.info(chalk.cyan('Prometheus Health URI: ') + chalk.yellow(PROMETHEUS_HEALTH_URL));
-    this.#logger.info(chalk.green('==============KAFKA==========='));
-    this.#logger.info(chalk.cyan('Kafka Broker URI: ') + chalk.yellow(kafkaUri));
-    this.#logger.info(chalk.green('==============OBSERVABILITY==========='));
-    this.#logger.info(chalk.cyan('Tempo URI: ') + chalk.yellow(tempo));
-    this.#logger.info(chalk.green('===============================')); // Endmarkierung für die Anwendungsinformationen
+    this.#printEnv(nodeEnv);
+    this.#logger.info(chalk.green('==============================='));
   }
 
-  /**
-   * @description Banner generieren und ausgeben.
-   */
+  #printEnv(nodeEnv: string): void {
+    const groups = new Map<string, [string, string][]>();
+    const order = ['LOGGER', 'KEYCLOAK', 'HEALTH', 'KAFKA', 'CACHE', 'STORAGE', 'GRPC', 'GEOCODING', 'DATABASE', 'SUBGRAPHS', 'OBSERVABILITY', 'GENERAL'];
+    for (const s of order) groups.set(s, []);
+
+    for (const [key, value] of Object.entries(env)) {
+      if (key.startsWith('LOG_') || ['NODE_ENV', 'PORT', 'SERVICE', 'HTTPS', 'KEYS_PATH'].includes(key)) continue;
+      const section = this.#sectionFor(key);
+      groups.get(section)?.push([key, String(value)]);
+    }
+
+    for (const section of order) {
+      const entries = groups.get(section)!;
+      if (entries.length === 0) continue;
+      this.#logger.info(chalk.green(`==============${section}===========`));
+      for (const [key, value] of entries) {
+        this.#logger.info(chalk.cyan(`${key}: `) + chalk.yellow(this.#displayValue(key, value, nodeEnv)));
+      }
+    }
+  }
+
+  #sectionFor(key: string): string {
+    if (key.startsWith('KC_') || key.startsWith('KEYCLOAK_')) return 'KEYCLOAK';
+    if (key.startsWith('HEALTH_')) return 'HEALTH';
+    if (key.startsWith('KAFKA_')) return 'KAFKA';
+    if (key.startsWith('VALKEY_') || key.startsWith('RATE_LIMIT_')) return 'CACHE';
+    if (key.startsWith('STORAGE_')) return 'STORAGE';
+    if (key.includes('GRPC')) return 'GRPC';
+    if (key.startsWith('GEOCODING_')) return 'GEOCODING';
+    if (key === 'DATABASE_URL') return 'DATABASE';
+    if (key.startsWith('ANALYTICS_') || key.startsWith('AUTHENTICATION_') || key.startsWith('EVENT_') || key.startsWith('INVITATION_') || key.startsWith('TICKET_') || key.startsWith('NOTIFICATION_') || key.startsWith('USER_') || key.startsWith('SEAT_') || key.startsWith('ADDRESS_') || key.startsWith('CHAT_') || key.startsWith('COMMUNICATION_GATEWAY_') || key.startsWith('SUPERGRAPH_')) return 'SUBGRAPHS';
+    if (key.startsWith('OTEL_') || key.startsWith('TEMPO_') || key.startsWith('PROMETHEUS_')) return 'OBSERVABILITY';
+    return 'GENERAL';
+  }
+
+  #displayValue(_key: string, value: string, nodeEnv: string): string {
+    if (nodeEnv !== 'development' && this.#isSensitiveKey(_key)) {
+      return '****';
+    }
+    return value;
+  }
+
+  #isSensitiveKey(key: string): boolean {
+    return /SECRET|TOKEN|PASSWORD|API_KEY|ACCESS_KEY|ENCRYPTION_KEY|JWE_KEY|JWS_KEYS|HMAC_SECRET|FINGERPRINT_SECRET|DATABASE_URL|CLIENT_SECRET/.test(key);
+  }
+
   #generateBanner(serviceName: string): void {
     cFonts.say(serviceName, {
-      font: 'block', // Schriftart des Banners
-      align: 'left', // Ausrichtung des Textes
-      gradient: ['white', 'black'], // Farbverlauf für das Banner
-      background: 'transparent', // Hintergrund des Banners
-      letterSpacing: 1, // Buchstabenabstand
-      lineHeight: 1, // Zeilenhöhe
+      font: 'block',
+      align: 'left',
+      gradient: ['white', 'black'],
+      background: 'transparent',
+      letterSpacing: 1,
+      lineHeight: 1,
     });
   }
 }

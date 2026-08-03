@@ -11,6 +11,7 @@ import {
 import {
   BadRequestException,
   ForbiddenException,
+  NotFoundException,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -28,7 +29,10 @@ import {
 import { PrismaService } from "../prisma/prisma.service.js";
 import { LineageService } from "../lineage/lineage.service.js";
 import { RealtimeMetricsService } from "./realtime-metrics.service.js";
-import { SemanticQueryService } from "./semantic-query.service.js";
+import {
+  SemanticQueryService,
+  type MetricPoint,
+} from "./semantic-query.service.js";
 
 @ObjectType()
 class MetricDefinitionPayload {
@@ -85,6 +89,24 @@ class KpiValuePayload {
 
   @Field({ nullable: true })
   unit?: string;
+}
+
+@ObjectType()
+class AnalyticsChartPointPayload {
+  @Field(() => GraphQLISODateTime)
+  time!: Date;
+
+  @Field(() => Float)
+  value!: number;
+}
+
+@ObjectType()
+class AnalyticsSecurityChartsPayload {
+  @Field(() => [AnalyticsChartPointPayload])
+  scans!: AnalyticsChartPointPayload[];
+
+  @Field(() => [AnalyticsChartPointPayload])
+  warnings!: AnalyticsChartPointPayload[];
 }
 
 @Resolver()
@@ -243,6 +265,56 @@ export class AnalyticsEngineResolver {
       inputCount: point.inputCount.toString(),
       watermark: point.watermark,
     }));
+  }
+
+  @Query(() => AnalyticsSecurityChartsPayload)
+  async analyticsSecurityCharts(
+    @Args("workspaceSlug") workspaceSlug: string,
+    @Args("from", { type: () => GraphQLISODateTime }) from: Date,
+    @Args("to", { type: () => GraphQLISODateTime }) to: Date,
+    @TenantId() organizationId: string | undefined,
+  ): Promise<AnalyticsSecurityChartsPayload> {
+    const tenant = requiredTenant(organizationId);
+    const workspace = await this.prisma.workspace.findUnique({
+      where: {
+        organizationId_slug: { organizationId: tenant, slug: workspaceSlug },
+      },
+    });
+    if (!workspace) {
+      throw new NotFoundException(`Workspace '${workspaceSlug}' not found`);
+    }
+    const metrics = await this.prisma.metricDefinition.findMany({
+      where: {
+        organizationId: tenant,
+        workspaceId: workspace.id,
+        key: { in: ['checkpoint.scans_per_minute', 'checkpoint.warnings_per_minute'] },
+        lifecycle: 'ACTIVE',
+      },
+    });
+    const byKey = new Map(metrics.map((metric) => [metric.key, metric]));
+
+    const toChartPoints = (
+      points: MetricPoint[],
+    ): AnalyticsChartPointPayload[] =>
+      points.map((point) => ({ time: point.bucketStart, value: point.value }));
+
+    const [scansMetric, warningsMetric] = [
+      byKey.get('checkpoint.scans_per_minute'),
+      byKey.get('checkpoint.warnings_per_minute'),
+    ];
+    const [scanSeries, warningSeries] = await Promise.all([
+      scansMetric
+        ? this.semantic.metricSeries(tenant, workspace.id, scansMetric.id, from, to)
+        : Promise.resolve([]),
+      warningsMetric
+        ? this.semantic.metricSeries(tenant, workspace.id, warningsMetric.id, from, to)
+        : Promise.resolve([]),
+    ]);
+
+    return {
+      scans: toChartPoints(scanSeries),
+      warnings: toChartPoints(warningSeries),
+    };
   }
 
   @Query(() => KpiValuePayload)

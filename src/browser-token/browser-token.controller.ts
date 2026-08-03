@@ -11,6 +11,8 @@ import type { Environment } from "../prisma/generated/client.js";
 import { BrowserTokenService } from "./browser-token.service.js";
 import { env } from "../config/env.js";
 
+const { INTERNAL_GATEWAY_TOKEN } = env;
+
 @Controller("v1/analytics")
 export class BrowserTokenController {
   constructor(private readonly tokens: BrowserTokenService) {}
@@ -21,7 +23,7 @@ export class BrowserTokenController {
     @Headers("x-tenant-id") organizationId: string | undefined,
     @Body() body: unknown,
   ): Promise<{ token: string; expiresIn: number }> {
-    if (!safeEqual(internalToken, env.INTERNAL_GATEWAY_TOKEN)) {
+    if (!safeEqual(internalToken, INTERNAL_GATEWAY_TOKEN)) {
       throw new UnauthorizedException("Invalid internal gateway token");
     }
     if (!organizationId) throw new ForbiddenException("Verified tenant is required");

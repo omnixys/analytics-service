@@ -8,9 +8,9 @@ const PROCESSING_VERSION = 'analytics-service@1.0.0';
 const SEED_SDK = '@omnixys/domain-facts/ticket';
 const ENVIRONMENT = 'DEVELOPMENT';
 
-const CHECKPOINT_TENANT_ID =
-  process.env.CHECKPOINT_TENANT_ID ??
-  'a738a3b6-c3c1-483f-926c-c25e18fd4ff2';
+const OMNIXYS_TENANT_ID =
+  process.env.DEFAULT_TENANT_ID ??
+  '6e788f7f-c233-4cb8-bbde-c0b855e564be';
 const PRODUCER = 'ticket';
 
 const SCAN_EVENT = 'QrScanSucceeded';
@@ -22,11 +22,11 @@ const SEED_DAYS = 7;
 const ACTIVE_START_HOUR = 9;
 const ACTIVE_END_HOUR = 21;
 
-function validateCheckpointTenant(): string {
-  if (!isUUID(CHECKPOINT_TENANT_ID, '4')) {
-    throw new Error('[SEED] CHECKPOINT_TENANT_ID must be a valid UUID v4');
+function validateOmnixysTenant(): string {
+  if (!isUUID(OMNIXYS_TENANT_ID, '4')) {
+    throw new Error('[SEED] OMNIXYS_TENANT_ID must be a valid UUID v4');
   }
-  return CHECKPOINT_TENANT_ID;
+  return OMNIXYS_TENANT_ID;
 }
 
 function mulberry32(seed: number): () => number {
@@ -219,7 +219,7 @@ function sourceSlug(producer: string, environment: string): string {
 }
 
 async function main(): Promise<void> {
-  const checkpointTenantId = validateCheckpointTenant();
+  const omnixysTenantId = validateOmnixysTenant();
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
     throw new Error('[SEED] DATABASE_URL is required');
@@ -234,12 +234,12 @@ async function main(): Promise<void> {
     const sourceSlugValue = sourceSlug(PRODUCER, ENVIRONMENT);
 
     const organization = await prisma.organization.upsert({
-      where: { id: checkpointTenantId },
+      where: { id: omnixysTenantId },
       update: {},
       create: {
-        id: checkpointTenantId,
-        name: `Organization ${checkpointTenantId}`,
-        slug: `tenant-${checkpointTenantId}`,
+        id: omnixysTenantId,
+        name: `Organization ${omnixysTenantId}`,
+        slug: `tenant-${omnixysTenantId}`,
       },
     });
 
@@ -451,7 +451,7 @@ async function main(): Promise<void> {
     }
 
     const result = {
-      tenantId: checkpointTenantId,
+      tenantId: omnixysTenantId,
       organizationId: organization.id,
       workspaceId: workspace.id,
       sourceId: source.id,
