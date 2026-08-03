@@ -9,10 +9,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/omnixys/user-service.git"
+    "url": "https://github.com/omnixys/analytics-service.git"
   },
   "bugs": {
-    "url": "https://github.com/omnixys/user-service/issues"
+    "url": "https://github.com/omnixys/analytics-service/issues"
   },
   "homepage": "https://omnixys.com",
   "license": "GPL-3.0-or-later",
@@ -26,7 +26,6 @@
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
-  
   "scripts": {
     "clean": "rm -rf dist tsconfig.build.tsbuildinfo",
     "prebuild": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
