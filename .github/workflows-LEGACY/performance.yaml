@@ -1,0 +1,99 @@
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# For more information, visit <https://www.gnu.org/licenses/>.
+#
+# Omnixys Workflow Suite – performance.yml
+# Purpose: Automated performance, load and benchmark testing (k6, Artillery, Lighthouse).
+# Language: Node / TypeScript (pnpm)
+
+name: Performance & Load Testing – Omnixys
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 1 * * 0' # wöchentlich Sonntag 01:00 UTC
+
+permissions:
+  contents: read
+
+concurrency:
+  group: performance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  performance:
+    name: API & UI Performance Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [24.10.0]
+
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ Enable Corepack (pnpm)
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: ⚙️ Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 🚀 API Load Test mit k6
+      - name: 🧪 Run API load test (k6)
+        uses: grafana/k6-action@v0.3.0
+        with:
+          filename: __tests__/performance/api-loadtest.js
+          flags: --vus 25 --duration 30s
+        env:
+          BASE_URL: ${{ secrets.PERF_API_URL }}
+
+      # ⚙️ Alternative Benchmark mit Artillery (Node-basiert)
+      - name: 🧩 Run Artillery scenario
+        run: |
+          if [ -f "__tests__/performance/artillery.yml" ]; then
+            pnpm add -g artillery
+            artillery run __tests__/performance/artillery.yml
+          else
+            echo "No Artillery scenario found, skipping..."
+          fi
+
+      # 🌐 Frontend Lighthouse Audit (falls Next.js/React vorhanden)
+      - name: 💡 Lighthouse performance audit
+        if: ${{ hashFiles('next.config.js') != '' }}
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            ${{ secrets.PERF_SITE_URL }}
+          budgetPath: ./__tests__/performance/lighthouse-budget.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: 📊 Upload performance reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-reports
+          path: |
+            __tests__/performance/*.json
+            __tests__/performance/*.html

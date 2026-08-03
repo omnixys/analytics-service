@@ -1,0 +1,234 @@
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# For more information, visit <https://www.gnu.org/licenses/>.
+#
+# Omnixys Workflow Suite – docker-build.yml
+# Purpose: Multi-architecture Docker image build and push to GHCR.
+# Language: Node / TypeScript (pnpm)
+
+name: Docker Build & Push – Omnixys
+
+on:
+  workflow_run:
+    workflows: ['Create GitHub Release – Omnixys']
+    types: [completed]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+env:
+  COSIGN_EXPERIMENTAL: 'true'
+  IMAGE_NAME: ${{ secrets.DOCKER_USER }}/${{ vars.SERVICE }}-service
+  IMAGE_NAME_REPOSITORY: ghcr.io/${{ github.repository }}
+
+  GH_PAT: ${{ secrets.GH_PAT }}
+  DOCKER_USER: ${{ secrets.DOCKER_USER }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+  OMNIXYS_ADMIN_USERNAME: ${{ secrets.OMNIXYS_ADMIN_USERNAME }}
+  OMNIXYS_ADMIN_PASSWORD: ${{ secrets.OMNIXYS_ADMIN_PASSWORD }}
+  OMNIXYS_USER_USERNAME: ${{ secrets.OMNIXYS_USER_USERNAME }}
+  OMNIXYS_USER_PASSWORD: ${{ secrets.OMNIXYS_USER_PASSWORD }}
+  OMNIXYS_EMAIL_DOMAIN: ${{ secrets.OMNIXYS_EMAIL_DOMAIN }}
+
+  POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+  POSTGRES_SQL_HOST: postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5433/${{ secrets.POSTGRES_DB }}
+
+  KAFKA_BROKER: ${{ secrets.KAFKA_BROKER }}
+  TEMPO_URI: ${{ secrets.TEMPO_URI }}
+
+  KC_ADMIN_USERNAME: ${{ secrets.KC_ADMIN_USERNAME }}
+  KC_ADMIN_PASSWORD: ${{ secrets.KC_ADMIN_PASSWORD }}
+  KC_URL: ${{ secrets.KC_URL }}
+  KC_REALM: ${{ secrets.KC_REALM }}
+  KC_CLIENT_ID: ${{ secrets.KC_CLIENT_ID }}
+  KC_CLIENT_SECRET: ${{ secrets.KC_CLIENT_SECRET }}
+
+  KEYS_PATH: ${{ secrets.KEYS_PATH }}
+  SERVICE: ${{ vars.SERVICE }}
+  PORT: ${{ secrets.PORT }}
+  GRAPHQL_PLAYGROUND: ${{ secrets.GRAPHQL_PLAYGROUND }}
+  NODE_ENV: ${{ secrets.NODE_ENV }}
+  HTTPS: ${{ secrets.HTTPS }}
+
+  LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
+  LOG_PRETTY: ${{ secrets.LOG_PRETTY }}
+  LOG_DEFAULT: ${{ secrets.LOG_DEFAULT }}
+  LOG_DIRECTORY: ${{ secrets.LOG_DIRECTORY }}
+  LOG_FILE_DEFAULT_NAME: ${{ secrets.LOG_FILE_DEFAULT_NAME }}
+
+  POSTGRES_TEST_USER: ${{ secrets.POSTGRES_TEST_USER }}
+  POSTGRES_TEST_PASSWORD: ${{ secrets.POSTGRES_TEST_PASSWORD }}
+  POSTGRES_TEST_DB: ${{ secrets.POSTGRES_TEST_DB }}
+  POSTGRES_TEST_URL: postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5433/${{ secrets.POSTGRES_DB }}
+
+jobs:
+  push-docker:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: 🐳 Build & Push Multi-Arch Images (Parallel)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [24.10.0]
+
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Read CURRENT_VERSION from repo variable
+        id: repovar
+        run: |
+          OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+          REPO=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          VALUE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${OWNER}/${REPO}/actions/variables/CURRENT_VERSION \
+            | jq -r '.value')
+          echo "version=$VALUE" >> $GITHUB_OUTPUT
+          echo "Current repo-level version: $VALUE"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+          driver-opts: image=moby/buildkit:latest
+
+      - name: 🔑 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: buildx-${{ github.sha }}
+          restore-keys: |
+            buildx-
+
+      - name: Build and Push Docker Image (Multi-Arch)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ steps.repovar.outputs.version }}
+            ${{ env.IMAGE_NAME }}:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.repovar.outputs.version }}
+            org.opencontainers.image.description=Omnixys Microservice – ${{ env.IMAGE_NAME }}
+            org.opencontainers.image.licenses=GPL-3.0-or-later
+          build-args: |
+            REVISION=${{ github.sha }}
+            CREATED=${{ env.CURRENT_DATE }}
+            APP_VERSION=${{ steps.repovar.outputs.version }}
+            APP_NAME=${{ vars.SERVICE }}
+            NODE_VERSION=${{ matrix.node-version }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign Docker Image with cosign (OIDC/GitHub)
+        run: |
+          cosign sign --yes --recursive ${{ env.IMAGE_NAME }}:${{ steps.repovar.outputs.version }}
+          cosign sign --yes --recursive ${{ env.IMAGE_NAME }}:latest
+
+  push-github:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: 🐳 Build & Push Multi-Arch Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [24.10.0]
+
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Read CURRENT_VERSION from repo variable
+        id: repovar
+        run: |
+          OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+          REPO=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          VALUE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${OWNER}/${REPO}/actions/variables/CURRENT_VERSION \
+            | jq -r '.value')
+          echo "version=$VALUE" >> $GITHUB_OUTPUT
+          echo "Current repo-level version: $VALUE"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+          driver-opts: image=moby/buildkit:latest
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: buildx-${{ github.sha }}
+          restore-keys: |
+            buildx-
+
+      - name: Build and Push Docker Image (GHCR)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.IMAGE_NAME_REPOSITORY }}:${{ steps.repovar.outputs.version }}
+            ${{ env.IMAGE_NAME_REPOSITORY }}:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.repovar.outputs.version }}
+            org.opencontainers.image.description=Omnixys Microservice – ${{ env.IMAGE_NAME }}
+            org.opencontainers.image.licenses=GPL-3.0-or-later
+          build-args: |
+            REVISION=${{ github.sha }}
+            CREATED=${{ env.CURRENT_DATE }}
+            APP_VERSION=${{ steps.repovar.outputs.version }}
+            APP_NAME=${{ vars.SERVICE }}
+            NODE_VERSION=${{ matrix.node-version }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign Docker Image with cosign (OIDC/GitHub)
+        run: |
+          cosign sign --yes --recursive ${{ env.IMAGE_NAME_REPOSITORY }}:${{ steps.repovar.outputs.version }}
+          cosign sign --yes --recursive ${{ env.IMAGE_NAME_REPOSITORY }}:latest

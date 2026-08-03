@@ -1,0 +1,85 @@
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# For more information, visit <https://www.gnu.org/licenses/>.
+#
+# Omnixys Workflow Suite – license-check.yml
+# Purpose: License compliance and OSS dependency validation.
+# Language: Node / TypeScript (pnpm)
+
+name: License Compliance Check – Omnixys
+
+on:
+  pull_request:
+    branches: ['**']
+  schedule:
+    - cron: '0 4 * * 0' # wöchentlich Sonntag 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: license-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  license-audit:
+    name: Run OSS License Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Enable Corepack (pnpm)
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.10.0
+          cache: 'pnpm'
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🧠 Run license audit
+        run: |
+          echo "🔍 Scanning dependencies for license compliance..."
+          pnpm exec license-checker --json --production --out licenses.json || true
+          echo "✅ License report generated: licenses.json"
+          jq '. | to_entries | map({package: .key, license: .value.licenses})' licenses.json > licenses-summary.json
+          cat licenses-summary.json
+
+      - name: 🚫 Validate allowed licenses
+        run: |
+          echo "Checking for disallowed licenses..."
+          DISALLOWED=$(jq -r '.[] | select(.license|test("GPL-1.0|AGPL|SSPL"; "i")) | .package' licenses-summary.json)
+          if [ -n "$DISALLOWED" ]; then
+            echo "❌ Found disallowed licenses:"
+            echo "$DISALLOWED"
+            exit 1
+          else
+            echo "✅ All licenses compliant."
+          fi
+
+      - name: 📊 Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: |
+            licenses.json
+            licenses-summary.json

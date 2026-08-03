@@ -1,0 +1,85 @@
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# For more information, visit <https://www.gnu.org/licenses/>.
+#
+# Omnixys Workflow Suite – semantic-pr.yml
+# Purpose: Enforce Conventional Commit and semantic PR title rules.
+# Language: Universal
+
+name: Semantic PR Validation – Omnixys
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: semantic-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-pr:
+    name: Validate PR Title Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔍 Validate PR title against Conventional Commits
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            chore
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            revert
+          scopes: |
+            auth
+            api
+            kafka
+            infra
+            ui
+            core
+            deps
+            security
+          requireScope: false
+          wip: false
+          subjectPattern: ^[a-z0-9].*$
+          subjectPatternError: '❌ The PR title must start with a lowercase letter or number.'
+
+      - name: ✅ PR title is valid
+        if: success()
+        run: echo "✅ Semantic PR validation passed."
+
+      - name: ❌ Invalid PR title
+        if: failure()
+        run: |
+          echo "❌ The PR title must follow the Conventional Commit format:"
+          echo "   feat(scope): short description"
+          echo "   fix(scope): bug description"
+          echo "   chore: maintenance message"
+          echo ""
+          echo "Examples:"
+          echo "   feat(api): add GraphQL subscription for invitations"
+          echo "   fix(auth): resolve Keycloak token refresh issue"

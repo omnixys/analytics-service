@@ -1,0 +1,102 @@
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# For more information, visit <https://www.gnu.org/licenses/>.
+#
+# Omnixys Workflow Suite – observability.yml
+# Purpose: Verify and validate Omnixys observability stack (Grafana Tempo, Loki, Prometheus, OTel).
+# Language: Universal (Node / Python / Java backends)
+
+name: Observability Validation – Omnixys
+
+on:
+  # workflow_run:
+  #   workflows: ["Deployment – Omnixys"]
+  #   types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: observability-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  observability-check:
+    name: Validate Telemetry Stack Health
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Check Prometheus endpoint
+        run: |
+          echo "🩺 Checking Prometheus endpoint..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.PROMETHEUS_URL }}/-/healthy")
+          if [ "$STATUS" != "200" ]; then
+            echo "❌ Prometheus health check failed (HTTP $STATUS)"
+            exit 1
+          else
+            echo "✅ Prometheus healthy"
+          fi
+
+      - name: 🔍 Check Loki endpoint
+        run: |
+          echo "🩺 Checking Loki endpoint..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.LOKI_URL }}/ready")
+          if [ "$STATUS" != "200" ]; then
+            echo "❌ Loki not ready (HTTP $STATUS)"
+            exit 1
+          else
+            echo "✅ Loki healthy"
+          fi
+
+      - name: 🔍 Check Tempo endpoint
+        run: |
+          echo "🩺 Checking Tempo endpoint..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.TEMPO_URL }}/ready")
+          if [ "$STATUS" != "200" ]; then
+            echo "❌ Tempo not ready (HTTP $STATUS)"
+            exit 1
+          else
+            echo "✅ Tempo healthy"
+          fi
+
+      - name: 🧠 Validate OpenTelemetry Collector pipeline
+        run: |
+          echo "🧩 Checking OpenTelemetry Collector (OTLP endpoint)..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.OTEL_COLLECTOR_URL }}/healthz")
+          if [ "$STATUS" != "200" ]; then
+            echo "❌ OTLP collector not reachable (HTTP $STATUS)"
+            exit 1
+          else
+            echo "✅ OpenTelemetry Collector reachable"
+          fi
+
+      - name: 📊 Create Observability Summary
+        run: |
+          echo "✅ Observability health verification completed at $(date)" > observability-report.txt
+          echo "Prometheus: ${{ secrets.PROMETHEUS_URL }}" >> observability-report.txt
+          echo "Loki: ${{ secrets.LOKI_URL }}" >> observability-report.txt
+          echo "Tempo: ${{ secrets.TEMPO_URL }}" >> observability-report.txt
+          echo "OTLP Collector: ${{ secrets.OTEL_COLLECTOR_URL }}" >> observability-report.txt
+          echo "" >> observability-report.txt
+          echo "All systems are healthy ✅" >> observability-report.txt
+
+      - name: 📤 Upload Observability Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: observability-report
+          path: observability-report.txt

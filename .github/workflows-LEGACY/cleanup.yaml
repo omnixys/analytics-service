@@ -1,0 +1,125 @@
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# For more information, visit <https://www.gnu.org/licenses/>.
+#
+# Omnixys Workflow Suite – cleanup.yml
+# Purpose: Automated cleanup of old artifacts, caches, and temporary Docker images.
+# Language: Universal
+
+name: Repository Maintenance – Cleanup
+
+on:
+  schedule:
+    - cron: '0 3 * * 0' # Wöchentlich Sonntag 03:00 UTC
+  workflow_dispatch:
+    inputs:
+      artifacts_retention:
+        description: 'Days to keep workflow artifacts'
+        default: '14'
+      cache_retention:
+        description: 'Days to keep workflow caches'
+        default: '7'
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: cleanup-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  cleanup:
+    name: Clean Old Artifacts, Logs & Caches
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🧹 Delete old workflow artifacts (with pagination)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const daysToKeep = parseInt(core.getInput('artifacts_retention')) || 7;
+            const cutoff = Date.now() - daysToKeep * 24 * 60 * 60 * 1000;
+            core.info(`🕓 Deleting artifacts older than ${daysToKeep} days...`);
+
+            for await (const response of github.paginate.iterator(
+              github.rest.actions.listArtifactsForRepo,
+              { owner: context.repo.owner, repo: context.repo.repo, per_page: 100 }
+            )) {
+              for (const artifact of response.data) {
+                const created = new Date(artifact.created_at).getTime();
+                if (created < cutoff) {
+                  try {
+                    await github.rest.actions.deleteArtifact({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      artifact_id: artifact.id,
+                    });
+                    core.info(`🗑️ Deleted artifact: ${artifact.name}`);
+                    await new Promise(r => setTimeout(r, 300));
+                  } catch (error) {
+                    core.warning(`⚠️ Failed to delete artifact '${artifact.name}': ${error.message}`);
+                  }
+                }
+              }
+            }
+
+      - name: ♻️ Delete caches older than retention period
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const retentionDays = parseInt(core.getInput('cache_retention')) || 7;
+            core.info(`♻️ Deleting caches older than ${retentionDays} days...`);
+
+            for await (const response of github.paginate.iterator(
+              github.rest.actions.getActionsCacheList,
+              { owner: context.repo.owner, repo: context.repo.repo, per_page: 100 }
+            )) {
+              for (const cache of response.data.actions_caches) {
+                const created = new Date(cache.created_at);
+                const ageDays = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
+                if (ageDays > retentionDays) {
+                  try {
+                    await github.rest.actions.deleteActionsCacheById({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      cache_id: cache.id,
+                    });
+                    core.info(`🧼 Deleted cache: ${cache.key}`);
+                    await new Promise(r => setTimeout(r, 300));
+                  } catch (error) {
+                    core.warning(`⚠️ Failed to delete cache '${cache.key}': ${error.message}`);
+                  }
+                }
+              }
+            }
+
+      - name: 🐳 Remove dangling Docker images
+        run: |
+          echo "🧹 Cleaning up local Docker cache..."
+          docker system prune -af || true
+
+      - name: 🧠 Cleanup summary
+        run: |
+          echo "✅ Cleanup completed at $(date)"
+          echo "🧾 Artifacts older than ${{ github.event.inputs.artifacts_retention || '7' }} days removed."
+          echo "♻️ Caches older than ${{ github.event.inputs.cache_retention || '7' }} days removed."
+          echo "🐳 Unused Docker layers cleared."

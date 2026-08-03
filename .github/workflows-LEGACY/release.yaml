@@ -1,0 +1,88 @@
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# For more information, visit <https://www.gnu.org/licenses/>.
+#
+# Omnixys Workflow Suite – release.yml
+# Purpose: Create a GitHub Release for the current Omnixys version.
+# Language: Node.js / TypeScript (pnpm)
+
+name: Create GitHub Release – Omnixys
+
+on:
+  workflow_run:
+    workflows: ['Generate Changelog – Omnixys']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. v1.0.1)'
+        required: true
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Create GitHub Release
+    if: >
+      (github.event.workflow_run.conclusion == 'success') ||
+      (startsWith(github.ref, 'refs/tags/'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: 🔍 Read CURRENT_VERSION from repo variable
+        id: repovar
+        run: |
+          OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+          REPO=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          VALUE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${OWNER}/${REPO}/actions/variables/CURRENT_VERSION \
+            | jq -r '.value')
+          echo "version=$VALUE" >> $GITHUB_OUTPUT
+          echo "Current repo-level version: $VALUE"
+
+      - name: 🏷️ Ensure tag exists for CURRENT_VERSION
+        id: tag
+        run: |
+          VERSION="${{ steps.repovar.outputs.version }}"
+          echo "Ensuring tag for $VERSION"
+
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists."
+          else
+            echo "Creating missing tag $VERSION..."
+            git tag "$VERSION"
+            git push origin "$VERSION"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.version }}
+          name: Release ${{ steps.tag.outputs.version }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false

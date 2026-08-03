@@ -1,0 +1,140 @@
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+#
+# Omnixys Workflow Suite – issue-triage.yml
+# Purpose: Automate issue labeling, reviewer assignment, and response templates.
+# Language: Universal
+
+name: Issue & PR Triage – Omnixys
+
+on:
+  issues:
+    types: [opened, reopened, labeled]
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+concurrency:
+  group: triage-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 🏷️ Label issues by keywords or template names
+      - name: 🏷️ Apply context labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            if (!issue) return;
+            const title = issue.title.toLowerCase();
+            const body = (issue.body || "").toLowerCase();
+            const labels = [];
+
+            // --- Keyword matching ---
+            if (title.includes("bug") || body.includes("steps to reproduce"))
+              labels.push("🐛 bug");
+            if (title.includes("feature") || title.includes("feat"))
+              labels.push("✨ feature");
+            if (title.includes("security") || body.includes("vulnerability"))
+              labels.push("🛡️ security");
+            if (title.includes("support") || title.includes("help"))
+              labels.push("🆘 support");
+            if (title.includes("question") || title.endsWith("?"))
+              labels.push("❓ question");
+            if (title.includes("task") || title.includes("todo"))
+              labels.push("✅ task");
+            if (title.includes("docs") || title.includes("documentation"))
+              labels.push("📝 documentation");
+            if (title.includes("test"))
+              labels.push("🧪 tests");
+            if (title.includes("refactor"))
+              labels.push("♻️ refactor");
+            if (labels.length === 0) labels.push("🧩 needs-review");
+
+            // --- Avoid duplicates ---
+            const existing = issue.labels.map(l => l.name);
+            const newLabels = labels.filter(l => !existing.includes(l));
+
+            if (newLabels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: newLabels
+              });
+              core.info(`🏷️ Added labels: ${newLabels.join(", ")}`);
+            } else {
+              core.info("🏷️ No new labels added.");
+            }
+
+      # 👤 Default reviewers for new PRs
+      - name: 👤 Assign default reviewers
+        if: github.event_name == 'pull_request_target'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) return;
+            const reviewers = ["Caleb-Script", "omnixys-bot"];
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                reviewers
+              });
+              core.info(`👤 Assigned reviewers: ${reviewers.join(", ")}`);
+            } catch (err) {
+              core.warning(`⚠️ Could not assign reviewers: ${err.message}`);
+            }
+
+      # 💬 Adaptive welcome comments
+      - name: 💬 Post contextual welcome comment
+        if: github.event.action == 'opened'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            if (!issue) return;
+            const title = issue.title.toLowerCase();
+            let body;
+            if (title.includes("bug"))
+              body = `🐛 Thanks @${issue.user.login}! Please include:\n- Steps to reproduce\n- Expected vs. actual behavior\n- Logs or screenshots if possible.`;
+            else if (title.includes("security"))
+              body = `🛡️ Hi @${issue.user.login}, thank you for reporting a potential vulnerability.\nOur team will review it privately. Please avoid posting sensitive info publicly.`;
+            else if (title.includes("feature"))
+              body = `✨ Thanks @${issue.user.login} for suggesting a new feature!\nPlease describe the problem this feature would solve and expected benefits.`;
+            else if (title.includes("support") || title.includes("help"))
+              body = `🆘 Thanks @${issue.user.login}!\nOur support team will assist you shortly. Meanwhile, check the README or documentation for quick solutions.`;
+            else if (title.includes("question"))
+              body = `❓ Hi @${issue.user.login}!\nThank you for your question. We'll clarify this soon — you can also check the FAQ section in the docs.`;
+            else
+              body = `👋 Hello @${issue.user.login}!\nThank you for opening this issue. The Omnixys team will review it soon. 🚀`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body
+            });
+            core.info("💬 Posted contextual welcome comment.");

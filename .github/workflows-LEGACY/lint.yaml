@@ -1,0 +1,71 @@
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# For more information, visit <https://www.gnu.org/licenses/>.
+#
+# Omnixys Workflow Suite – lint.yml
+# Purpose: Fast ESLint + Prettier validation for pull requests.
+# Language: Node / TypeScript (pnpm)
+
+name: Lint Check – Omnixys
+
+on:
+  pull_request:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Run ESLint & Prettier Check
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [24.10.0]
+
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Enable Corepack (pnpm)
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: 📦 Install dependencies (only prod + dev tools)
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: 🔍 Run ESLint
+        run: pnpm lint
+
+      - name: 💅 Run Prettier check
+        run: pnpm format
+
+      - name: 🧠 Show lint summary
+        if: failure()
+        run: |
+          echo "❌ Lint or formatting issues detected!"
+          echo "Please run 'pnpm lint && pnpm format' locally before pushing."

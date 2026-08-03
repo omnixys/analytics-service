@@ -1,0 +1,90 @@
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# For more information, visit <https://www.gnu.org/licenses/>.
+#
+# Omnixys Workflow Suite – changelog.yml
+# Purpose: Generate or fix CHANGELOG.md after version bump.
+# Language: Node.js / TypeScript (pnpm)
+
+name: Generate Changelog – Omnixys
+
+on:
+  workflow_run:
+    workflows: ['Documentation Build & Publish – Omnixys']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Regenerate full changelog (yes/no)?'
+        required: false
+        default: 'no'
+
+permissions:
+  contents: write
+
+jobs:
+  changelog:
+    name: Generate CHANGELOG.md
+    runs-on: ubuntu-latest
+    if: >
+      (github.event.workflow_run.conclusion == 'success') ||
+      (startsWith(github.ref, 'refs/tags/'))
+
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: 🔍 Read CURRENT_VERSION from repo variable
+        id: repovar
+        run: |
+          OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+          REPO=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          VALUE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${OWNER}/${REPO}/actions/variables/CURRENT_VERSION \
+            | jq -r '.value')
+          echo "version=$VALUE" >> $GITHUB_OUTPUT
+          echo "Current repo-level version: $VALUE"
+
+      - name: ⚙️ Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm install --frozen-lockfile
+          pnpm add -D conventional-changelog-cli conventional-changelog-conventionalcommits
+
+      - name: 🧠 Generate CHANGELOG.md
+        run: |
+          # Regenerate the entire changelog history (if mode == yes)
+          if [ "${{ github.event.inputs.mode }}" = "yes" ]; then
+            npx conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 0
+          else
+            # Append only new entries
+            npx conventional-changelog -p conventionalcommits -i CHANGELOG.md -s
+          fi
+          echo "Preview of CHANGELOG.md:"
+          head -n 20 CHANGELOG.md
+
+      - name: 💾 Commit and push changelog
+        run: |
+          VERSION="${{ steps.repovar.outputs.version }}"
+          git config user.name "omnixys-bot"
+          git config user.email "bot@omnixys.com"
+          git add CHANGELOG.md
+          git commit -m "docs(changelog): update for ${VERSION}" || echo "No changes"
+          git push origin main

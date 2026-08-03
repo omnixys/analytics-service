@@ -1,0 +1,97 @@
+# @license GPL-3.0-or-later
+# Copyright (C) 2025 Caleb Gyamfi - Omnixys Technologies
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# For more information, visit <https://www.gnu.org/licenses/>.
+#
+# Omnixys Workflow Suite – docs.yml
+# Purpose: Build and publish Omnixys documentation to GitHub Pages or Docs site.
+# Language: Markdown / AsciiDoc / Docusaurus / Docsify
+
+name: Documentation Build & Publish – Omnixys
+
+on:
+  workflow_run:
+    workflows: ['Determine Next Version Tag – Omnixys']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# concurrency:
+#   group: docs-${{ github.ref }}
+#   cancel-in-progress: true
+
+jobs:
+  build-docs:
+    name: Build and Deploy Documentation
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    strategy:
+      matrix:
+        node-version: [24.10.0]
+
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Enable Corepack (pnpm)
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: ⚙️ Setup Node.js - ${{ matrix.node-version }} (for Docsify/Docusaurus)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🧱 Build documentation
+        run: |
+          if [ -f docs/omnixys-workflow-standards.adoc ]; then
+            echo "Building AsciiDoc documentation..."
+            sudo apt-get update && sudo apt-get install -y asciidoctor
+            asciidoctor -a toc=left -a stylesheet=docs/omnixys-theme.css -D docs/build docs/omnixys-workflow-standards.adoc
+          elif [ -f docs/docusaurus.config.js ]; then
+            echo "Building Docusaurus documentation..."
+            cd docs && pnpm build
+          elif [ -f docs/index.html ]; then
+            echo "Docsify detected, using static export."
+          else
+            echo "⚠️ No recognized documentation source found."
+          fi
+
+      - name: Generate documentation (TypeDoc)
+        run: pnpm run typedoc
+
+      - name: 🌐 Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GH_PAT }}
+          publish_dir: ./docs
+          publish_branch: gh-pages
+          force_orphan: true
+          enable_jekyll: false
+          allow_empty_commit: false
+          keep_files: false
+
+      - name: ✅ Deployment summary
+        run: |
+          echo "✅ Documentation successfully built and deployed."
+          echo "📚 URL: https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/"
