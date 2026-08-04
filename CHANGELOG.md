@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [1.1.0](https://github.com/omnixys/analytics-service/compare/v1.0.0...v1.1.0) (2026-08-04)
+
+### Wedding
+
+* **Wedding:** add more analytics metrics ([](https://github.com/omnixys/analytics-service/commit/21e5e762e74e5fb98369eadaad768a3dbafc22dc))
+
 ## 1.0.0 (2026-08-03)
 
 ### Analytics
