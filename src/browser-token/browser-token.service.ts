@@ -1,20 +1,21 @@
-import { Injectable } from "@nestjs/common";
-import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import type { Environment } from "../prisma/generated/client.js";
-import { PrismaService } from "../prisma/prisma.service.js";
-import type { IngestionPrincipal } from "../api-key/api-key.service.js";
-import { env } from "../config/env.js";
+import type { IngestionPrincipal } from '../api-key/api-key.service.js';
+import { env } from '../config/env.js';
+import type { Environment } from '../prisma/generated/client.js';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { Injectable } from '@nestjs/common';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 
-const {BROWSER_TOKEN_SECRET } = env;
+const { BROWSER_TOKEN_SECRET } = env;
 
 interface BrowserTokenClaims {
-  aud: "omnixys-analytics";
-  iss: "analytics-service";
+  aud: 'omnixys-analytics';
+  iss: 'analytics-service';
   sub: string;
   organizationId: string;
   workspaceId: string;
   sourceId: string;
   environment: Environment;
+  application: AnalyticsApplication;
   origin: string;
   events: string[];
   jti: string;
@@ -31,13 +32,15 @@ export class BrowserTokenService {
     expiresIn: number;
   }> {
     validateIssue(input);
-    const source = await this.provision(input);
+    const application = input.application ?? 'checkpoint';
+    const source = await this.provision({ ...input, application });
     const now = Math.floor(Date.now() / 1_000);
     const claims: BrowserTokenClaims = {
-      aud: "omnixys-analytics",
-      iss: "analytics-service",
-      sub: `checkpoint:${input.organizationId}`,
+      aud: 'omnixys-analytics',
+      iss: 'analytics-service',
+      sub: `${application}:${input.organizationId}`,
       ...source,
+      application,
       origin: input.origin,
       events: [...new Set(input.events)].sort(),
       jti: randomUUID(),
@@ -54,14 +57,14 @@ export class BrowserTokenService {
   ): IngestionPrincipal {
     const claims = verifySignature(token);
     if (
-      claims.aud !== "omnixys-analytics" ||
-      claims.iss !== "analytics-service" ||
+      claims.aud !== 'omnixys-analytics' ||
+      claims.iss !== 'analytics-service' ||
       claims.exp <= Math.floor(Date.now() / 1_000) ||
       !origin ||
       claims.origin !== origin ||
       eventNames.some((name) => !claims.events.includes(name))
     ) {
-      throw new Error("Browser analytics token constraints are invalid");
+      throw new Error('Browser analytics token constraints are invalid');
     }
     return {
       id: claims.jti,
@@ -69,11 +72,11 @@ export class BrowserTokenService {
       workspaceId: claims.workspaceId,
       sourceId: claims.sourceId,
       environment: claims.environment,
-      scopes: ["events:write"],
+      scopes: ['events:write'],
     };
   }
 
-  private provision(input: BrowserTokenIssue): Promise<{
+  private provision(input: BrowserTokenIssue & { application: AnalyticsApplication }): Promise<{
     organizationId: string;
     workspaceId: string;
     sourceId: string;
@@ -93,27 +96,27 @@ export class BrowserTokenService {
         where: {
           organizationId_slug: {
             organizationId: input.organizationId,
-            slug: "checkpoint",
+            slug: input.application,
           },
         },
         create: {
           organizationId: input.organizationId,
-          name: "Checkpoint",
-          slug: "checkpoint",
+          name: applicationName(input.application),
+          slug: input.application,
         },
         update: {},
       });
-      const slug = `checkpoint-${input.environment.toLowerCase()}`;
+      const slug = `${input.application}-${input.environment.toLowerCase()}`;
       const source = await tx.source.upsert({
         where: { workspaceId_slug: { workspaceId: workspace.id, slug } },
         create: {
           organizationId: input.organizationId,
           workspaceId: workspace.id,
-          name: `checkpoint (${input.environment.toLowerCase()})`,
+          name: `${input.application} (${input.environment.toLowerCase()})`,
           slug,
-          lifecycle: "ACTIVE",
+          lifecycle: 'ACTIVE',
         },
-        update: { lifecycle: "ACTIVE" },
+        update: { lifecycle: 'ACTIVE' },
       });
       for (const eventName of [...new Set(input.events)]) {
         const definition = await tx.eventDefinition.upsert({
@@ -130,24 +133,24 @@ export class BrowserTokenService {
             sourceId: source.id,
             environment: input.environment,
             name: eventName,
-            owner: "checkpoint",
-            lifecycle: "ACTIVE",
+            owner: input.application,
+            lifecycle: 'ACTIVE',
           },
-          update: { lifecycle: "ACTIVE" },
+          update: { lifecycle: 'ACTIVE' },
         });
         await tx.eventSchemaVersion.upsert({
           where: {
             eventDefinitionId_version: {
               eventDefinitionId: definition.id,
-              version: "1.0",
+              version: '1.0',
             },
           },
           create: {
             eventDefinitionId: definition.id,
-            version: "1.0",
-            schema: { type: "object" },
-            privacy: { classification: "business", pii: false },
-            createdBy: "browser-token-provisioner",
+            version: '1.0',
+            schema: { type: 'object' },
+            privacy: { classification: 'business', pii: false },
+            createdBy: 'browser-token-provisioner',
           },
           update: {},
         });
@@ -164,16 +167,16 @@ export class BrowserTokenService {
           workspaceId: workspace.id,
           sourceId: source.id,
           environment: input.environment,
-          lifecycle: "ACTIVE",
+          lifecycle: 'ACTIVE',
           activeVersion: 1,
         },
-        update: { lifecycle: "ACTIVE", activeVersion: 1 },
+        update: { lifecycle: 'ACTIVE', activeVersion: 1 },
       });
       const definitions = await tx.eventDefinition.findMany({
         where: {
           sourceId: source.id,
           environment: input.environment,
-          lifecycle: "ACTIVE",
+          lifecycle: 'ACTIVE',
         },
         select: { id: true },
       });
@@ -184,10 +187,9 @@ export class BrowserTokenService {
         create: {
           trackingPlanId: plan.id,
           version: 1,
-          mode:
-            input.environment === "DEVELOPMENT" ? "WARN" : "QUARANTINE",
+          mode: input.environment === 'DEVELOPMENT' ? 'WARN' : 'QUARANTINE',
           definitionIds: definitions.map(({ id }) => id),
-          createdBy: "browser-token-provisioner",
+          createdBy: 'browser-token-provisioner',
         },
         update: { definitionIds: definitions.map(({ id }) => id) },
       });
@@ -202,53 +204,58 @@ export class BrowserTokenService {
 }
 
 export interface BrowserTokenIssue {
+  application?: AnalyticsApplication;
   organizationId: string;
   origin: string;
   environment: Environment;
   events: string[];
 }
 
+export type AnalyticsApplication = 'checkpoint' | 'wedding';
+
 function validateIssue(input: BrowserTokenIssue): void {
   if (
+    (input.application !== undefined &&
+      input.application !== 'checkpoint' &&
+      input.application !== 'wedding') ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
       input.organizationId,
     ) ||
     !URL.canParse(input.origin) ||
     input.events.length < 1 ||
     input.events.length > 100 ||
-    input.events.some((name) => !/^[A-Za-z][A-Za-z0-9]{1,99}$/.test(name))
+    input.events.some((name) => !/^\$?[A-Za-z][A-Za-z0-9]{1,99}$/.test(name))
   ) {
-    throw new TypeError("Invalid browser analytics token request");
+    throw new TypeError('Invalid browser analytics token request');
   }
 }
 
+function applicationName(application: AnalyticsApplication): string {
+  return application === 'checkpoint' ? 'Checkpoint' : 'Wedding';
+}
+
 function sign(claims: BrowserTokenClaims): string {
-  const header = encode({ alg: "HS256", typ: "JWT" });
+  const header = encode({ alg: 'HS256', typ: 'JWT' });
   const payload = encode(claims);
   const signature = signatureFor(`${header}.${payload}`);
   return `${header}.${payload}.${signature}`;
 }
 
 function verifySignature(token: string): BrowserTokenClaims {
-  const [header, payload, signature] = token.split(".");
-  if (!header || !payload || !signature) throw new Error("Invalid token");
+  const [header, payload, signature] = token.split('.');
+  if (!header || !payload || !signature) throw new Error('Invalid token');
   const expected = Buffer.from(signatureFor(`${header}.${payload}`));
   const actual = Buffer.from(signature);
-  if (
-    expected.length !== actual.length ||
-    !timingSafeEqual(expected, actual)
-  ) {
-    throw new Error("Invalid token signature");
+  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
+    throw new Error('Invalid token signature');
   }
-  return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as BrowserTokenClaims;
+  return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as BrowserTokenClaims;
 }
 
 function signatureFor(value: string): string {
-  return createHmac("sha256", BROWSER_TOKEN_SECRET)
-    .update(value)
-    .digest("base64url");
+  return createHmac('sha256', BROWSER_TOKEN_SECRET).update(value).digest('base64url');
 }
 
 function encode(value: unknown): string {
-  return Buffer.from(JSON.stringify(value)).toString("base64url");
+  return Buffer.from(JSON.stringify(value)).toString('base64url');
 }
