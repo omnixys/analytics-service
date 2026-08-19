@@ -3,6 +3,17 @@
 All notable changes in this project will be documented in this file.
 
 
+## [1.1.1](https://github.com/omnixys/analytics-service/compare/v1.1.0...v1.1.1) (2026-08-19)
+
+### Agent
+
+* **Agent:** add repository development instructions ([](https://github.com/omnixys/analytics-service/commit/67f6f4d2251de6ab653f8ec1104dce46161dfe3a))
+
+### Analytics
+
+* **Analytics:** exclude health endpoints from rate-limit and bump version ([](https://github.com/omnixys/analytics-service/commit/6c8a3140947e3bfbc481663d3be6c5265f6ca838))
+* **Analytics:** use allowList for rate-limit skip and fix pnpm overrides ([](https://github.com/omnixys/analytics-service/commit/b73813c8383d01d5319c2a00db38be0ce1509a7c))
+
 ## [1.1.0](https://github.com/omnixys/analytics-service/compare/v1.0.0...v1.1.0) (2026-08-04)
 
 ### Wedding
