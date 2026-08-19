@@ -84,8 +84,8 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(4ab1873e692f68b4a78160691871aecf)
       '@omnixys/security-ts':
-        specifier: ^4.0.0
-        version: 4.0.0(265b8117c4e62777cd4e9fae92c56e57)
+        specifier: ^4.0.1
+        version: 4.0.1(265b8117c4e62777cd4e9fae92c56e57)
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.1
@@ -1225,8 +1225,8 @@ packages:
       fastify:
         optional: true
 
-  '@omnixys/security-ts@4.0.0':
-    resolution: {integrity: sha512-/TI7TIkSlH2szDTPHl5voOaS/ShGrlH72IOdZdolhofeFALM4sQyen7ddgnevhDknYVxKWhFPg2241nM6gETJQ==, tarball: https://npm.pkg.github.com/download/@omnixys/security-ts/4.0.0/a5e83606219eb3e65e25040f6663d6eaf8db4df3}
+  '@omnixys/security-ts@4.0.1':
+    resolution: {integrity: sha512-DTlgWIttYfExyqJSlyJ6RnfnUWhRGN9bAcWa0wCPpB4qjgZUY3nUCkPOVx1FNVhTrUYkIGx5Twtvr1+IEwVcAw==, tarball: https://npm.pkg.github.com/download/@omnixys/security-ts/4.0.1/d7b0032c19bf71bfaf16dd42fe2dbc03124ac821}
     peerDependencies:
       '@fastify/cookie': ^11.0.0
       '@nestjs/common': ^10 || ^11
@@ -6572,7 +6572,7 @@ snapshots:
       - supports-color
       - zone.js
 
-  '@omnixys/security-ts@4.0.0(265b8117c4e62777cd4e9fae92c56e57)':
+  '@omnixys/security-ts@4.0.1(265b8117c4e62777cd4e9fae92c56e57)':
     dependencies:
       '@fastify/cookie': 11.1.2
       '@grpc/grpc-js': 1.14.4
