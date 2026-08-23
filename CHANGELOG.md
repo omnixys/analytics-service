@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [1.1.3](https://github.com/omnixys/analytics-service/compare/v1.1.2...v1.1.3) (2026-08-23)
+
+### Logger
+
+* **Logger:** fix terminal logger ([](https://github.com/omnixys/analytics-service/commit/89db9a248a178c21f886b56119b659592faa207a))
+
 ## [1.1.2](https://github.com/omnixys/analytics-service/compare/v1.1.1...v1.1.2) (2026-08-23)
 
 ### Observability
