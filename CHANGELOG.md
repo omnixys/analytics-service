@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [1.1.2](https://github.com/omnixys/analytics-service/compare/v1.1.1...v1.1.2) (2026-08-23)
+
+### Observability
+
+* **Observability:** update dependency ([](https://github.com/omnixys/analytics-service/commit/ac8b452a0959d172f051596daa5a2cc24bdd5bef))
+
 ## [1.1.1](https://github.com/omnixys/analytics-service/compare/v1.1.0...v1.1.1) (2026-08-19)
 
 ### Agent
