@@ -1,32 +1,32 @@
-import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
-import { ValkeyModule } from "@omnixys/cache-ts";
-import { ContextModule, trustedProxyPolicyFromAddresses } from "@omnixys/context-ts";
-import { OmnixysGraphQLModule } from "@omnixys/graphql-ts";
-import { OmnixysHttpModule } from "@omnixys/http-ts";
-import { KafkaModule } from "@omnixys/kafka-ts";
-import { LoggerModule } from "@omnixys/logger-ts";
-import { ObservabilityModule } from "@omnixys/observability-ts";
-import { SecurityModule } from "@omnixys/security-ts";
-import { CatalogModule } from "./catalog/catalog.module.js";
-import { AnalyticsEngineModule } from "./analytics-engine/analytics-engine.module.js";
-import { PlatformResolver } from "./graphql/platform.resolver.js";
-import { HealthModule } from "./health/health.module.js";
-import { IngestionModule } from "./ingestion/ingestion.module.js";
-import { PrismaModule } from "./prisma/prisma.module.js";
-import { ProcessingModule } from "./processing/processing.module.js";
-import { LineageModule } from "./lineage/lineage.module.js";
-import { ReplayModule } from "./replay/replay.module.js";
-import { SearchModule } from "./search/search.module.js";
-import { SchedulerModule } from "./scheduler/scheduler.module.js";
-import { FeatureFlagModule } from "./feature-flags/feature-flag.module.js";
-import { RuleModule } from "./rules/rule.module.js";
-import { DomainEventIngestionModule } from "./domain-ingestion/domain-event-ingestion.module.js";
-import { BrowserTokenModule } from "./browser-token/browser-token.module.js";
-import { env } from "./config/env.js";
-import { FastifyReply, FastifyRequest } from "fastify";
-import { BannerService } from "./config/banner.service.js";
-import { RateLimitValkeyAdapterModule } from "./adapter/rate-limit/rate-limit-valkey-adapter.module.js";
+import { RateLimitValkeyAdapterModule } from './adapter/rate-limit/rate-limit-valkey-adapter.module.js';
+import { AnalyticsEngineModule } from './analytics-engine/analytics-engine.module.js';
+import { BrowserTokenModule } from './browser-token/browser-token.module.js';
+import { CatalogModule } from './catalog/catalog.module.js';
+import { BannerService } from './config/banner.service.js';
+import { env } from './config/env.js';
+import { DomainEventIngestionModule } from './domain-ingestion/domain-event-ingestion.module.js';
+import { FeatureFlagModule } from './feature-flags/feature-flag.module.js';
+import { PlatformResolver } from './graphql/platform.resolver.js';
+import { HealthModule } from './health/health.module.js';
+import { IngestionModule } from './ingestion/ingestion.module.js';
+import { LineageModule } from './lineage/lineage.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
+import { ProcessingModule } from './processing/processing.module.js';
+import { ReplayModule } from './replay/replay.module.js';
+import { RuleModule } from './rules/rule.module.js';
+import { SchedulerModule } from './scheduler/scheduler.module.js';
+import { SearchModule } from './search/search.module.js';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ValkeyModule } from '@omnixys/cache-ts';
+import { ContextModule, trustedProxyPolicyFromAddresses } from '@omnixys/context-ts';
+import { OmnixysGraphQLModule } from '@omnixys/graphql-ts';
+import { OmnixysHttpModule } from '@omnixys/http-ts';
+import { KafkaModule } from '@omnixys/kafka-ts';
+import { LoggerModule } from '@omnixys/logger-ts';
+import { ObservabilityModule } from '@omnixys/observability-ts';
+import { SecurityModule } from '@omnixys/security-ts';
+import { FastifyReply, FastifyRequest } from 'fastify';
 
 const {
   SCHEMA_TARGET,
@@ -41,6 +41,7 @@ const {
   KAFKA_IDEMPOTENCY_TTL,
   KAFKA_RETRY,
 
+  OTEL_LOGS_ENABLED,
   OTEL_URI,
   OTEL_TRANSPORT_MODE,
   OTEL_SAMPLING_RATIO,
@@ -72,9 +73,7 @@ const {
         mode: NODE_ENV === 'production' ? 'strict' : 'legacy',
         ...(DEFAULT_TENANT_ID ? { defaultTenantId: DEFAULT_TENANT_ID } : {}),
       },
-      trustedProxyPolicy: trustedProxyPolicyFromAddresses(
-        TRUSTED_PROXY_ADDRESSES,
-      ),
+      trustedProxyPolicy: trustedProxyPolicyFromAddresses(TRUSTED_PROXY_ADDRESSES),
     }),
     OmnixysHttpModule.forRoot({ serviceName: SERVICE }),
     ValkeyModule.forRoot({
@@ -95,7 +94,7 @@ const {
         defaultWindowMs: RATE_LIMIT_WINDOW,
         imports: [RateLimitValkeyAdapterModule],
       },
-      hash: { 
+      hash: {
         encryptionKey: ENCRYPTION_KEY,
       },
     }),
@@ -120,7 +119,7 @@ const {
       retry: { maxRetries: KAFKA_RETRY },
       idempotency: { enabled: KAFKA_IDEMPOTENCY_ENABLE, ttlSeconds: KAFKA_IDEMPOTENCY_TTL },
     }),
-    
+
     ObservabilityModule.forRoot({
       serviceName: SERVICE,
 
@@ -128,6 +127,10 @@ const {
         endpoint: OTEL_URI,
         transport: OTEL_TRANSPORT_MODE as 'http' | 'grpc',
         samplingRatio: OTEL_SAMPLING_RATIO,
+      },
+
+      logs: {
+        enabled: OTEL_LOGS_ENABLED,
       },
 
       metrics: {

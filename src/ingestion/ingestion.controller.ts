@@ -1,3 +1,5 @@
+import { env } from '../config/env.js';
+import { IngestionService } from './ingestion.service.js';
 import {
   Body,
   Controller,
@@ -6,29 +8,30 @@ import {
   HttpStatus,
   Post,
   ServiceUnavailableException,
-} from "@nestjs/common";
-import type { AnalyticsBatchResponse } from "@omnixys/contracts-ts/analytics";
-import { IngestionService } from "./ingestion.service.js";
-import { env } from "../config/env.js";
-
+} from '@nestjs/common';
+import type { AnalyticsBatchResponse } from '@omnixys/contracts-ts/analytics';
 
 const { CLIENT_INGESTION_ENABLED } = env;
 
-@Controller("v1/analytics")
+export function isClientIngestionDisabled(enabled: boolean): boolean {
+  return !enabled;
+}
+
+@Controller('v1/analytics')
 export class IngestionController {
   constructor(private readonly ingestion: IngestionService) {}
 
-  @Post("batch")
+  @Post('batch')
   @HttpCode(HttpStatus.ACCEPTED)
   ingestBatch(
-    @Headers("authorization") authorization: string | undefined,
-    @Headers("origin") origin: string | undefined,
+    @Headers('authorization') authorization: string | undefined,
+    @Headers('origin') origin: string | undefined,
     @Body() body: unknown,
   ): Promise<AnalyticsBatchResponse> {
-    if (CLIENT_INGESTION_ENABLED) {
+    if (isClientIngestionDisabled(CLIENT_INGESTION_ENABLED)) {
       throw new ServiceUnavailableException({
-        code: "CLIENT_INGESTION_DISABLED",
-        message: "Client analytics ingestion is not enabled in this environment",
+        code: 'CLIENT_INGESTION_DISABLED',
+        message: 'Client analytics ingestion is not enabled in this environment',
       });
     }
     return this.ingestion.ingest(authorization, body, origin);

@@ -60,6 +60,7 @@ export const env = {
     transform: toNumber,
   }),
 
+  OTEL_LOGS_ENABLED: getEnv('OTEL_LOGS_ENABLED', 'true', { transform: toBool }),
   OTEL_URI: getEnv('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4318'),
   OTEL_TRANSPORT_MODE: getEnv('OTEL_TRANSPORT_MODE', 'http', {
     required: true,
@@ -99,16 +100,12 @@ export const env = {
   COOKIE_SECRET: getEnv('COOKIE_SECRET', 'omnixys-development-secret', {
     required: true,
   }),
-  BROWSER_TOKEN_SECRET: getEnv(
-    "ANALYTICS_BROWSER_TOKEN_SECRET",
-    "",
-    { required: true }
-  ),
-  INTERNAL_GATEWAY_TOKEN: getEnv(
-    "INTERNAL_GATEWAY_TOKEN",
-    "",
-    { required: true }
-  ),
+  BROWSER_TOKEN_SECRET: getEnv('ANALYTICS_BROWSER_TOKEN_SECRET', '', {
+    required: true,
+  }),
+  INTERNAL_GATEWAY_TOKEN: getEnv('INTERNAL_GATEWAY_TOKEN', '', {
+    required: true,
+  }),
 
   ENCRYPTION_KEY: getEnv('ENCRYPTION_KEY', '', { required: true }),
 
@@ -120,6 +117,10 @@ export const env = {
 
   DATABASE_URL: getEnv('DATABASE_URL', '', { required: true }),
 
-  DOMAIN_INGESTION_ENABLED: getEnv('DOMAIN_INGESTION_ENABLED', 'true', { transform: toBool }),
-  CLIENT_INGESTION_ENABLED: getEnv('CLIENT_INGESTION_ENABLED', 'true', { transform: toBool }),
+  DOMAIN_INGESTION_ENABLED: getEnv('DOMAIN_INGESTION_ENABLED', 'true', {
+    transform: toBool,
+  }),
+  CLIENT_INGESTION_ENABLED: getEnv('CLIENT_INGESTION_ENABLED', 'true', {
+    transform: toBool,
+  }),
 } as const;
