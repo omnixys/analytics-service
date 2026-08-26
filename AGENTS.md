@@ -10,7 +10,7 @@
 Omnixys Analytics Service – event analytics, feature flags, replay and scheduling.
 
 - Repository path: `services/analytics` (relative to the Omnixys root)
-- Package: `analytics-service` (version: 1.1.0)
+- Package: `analytics-service` (version: 1.2.0)
 - Runtime: Node >=25.8.2 (pnpm >=10.33.0)
 - Kind: Service
 
