@@ -3,6 +3,13 @@
 All notable changes in this project will be documented in this file.
 
 
+## [1.2.1](https://github.com/omnixys/analytics-service/compare/v1.2.0...v1.2.1) (2026-08-26)
+
+### Deps
+
+* **Deps:** update logger to 3.2.6 ([](https://github.com/omnixys/analytics-service/commit/bc89ad439bab82b70c6aaa5acf74d50f34cf1318))
+* **Deps:** update shared TypeScript packages ([](https://github.com/omnixys/analytics-service/commit/0e5260773020c11d5e6a0638f9ed1d8e18c36f64))
+
 ## [1.2.0](https://github.com/omnixys/analytics-service/compare/v1.1.3...v1.2.0) (2026-08-26)
 
 ### Deps
