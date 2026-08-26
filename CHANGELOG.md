@@ -3,6 +3,16 @@
 All notable changes in this project will be documented in this file.
 
 
+## [1.2.3](https://github.com/omnixys/analytics-service/compare/v1.2.2...v1.2.3) (2026-08-26)
+
+### Build
+
+* **Build:** fix build errors ([](https://github.com/omnixys/analytics-service/commit/23c2421c1262ede0c9705f197edf5ad424a002d2))
+
+### Other
+
+* **Other:** Merge branch 'main' of https://github.com/omnixys/analytics-service ([](https://github.com/omnixys/analytics-service/commit/a7d46b2b27e09afe7431d5a03b760aab1134aaec))
+
 ## [1.2.2](https://github.com/omnixys/analytics-service/compare/v1.2.1...v1.2.2) (2026-08-26)
 
 ### Build
