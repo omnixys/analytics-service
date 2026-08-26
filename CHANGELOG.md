@@ -3,6 +3,16 @@
 All notable changes in this project will be documented in this file.
 
 
+## [1.2.0](https://github.com/omnixys/analytics-service/compare/v1.1.3...v1.2.0) (2026-08-26)
+
+### Deps
+
+* **Deps:** update omnixys ts packages ([](https://github.com/omnixys/analytics-service/commit/135c3bb3451a09cfdd2a5fb00ff16e1fd527cbdd))
+
+### Otel
+
+* **Otel:** add otel logs ([](https://github.com/omnixys/analytics-service/commit/74fff5f3c7136faca79093819f97e4cfb7a169b3))
+
 ## [1.1.3](https://github.com/omnixys/analytics-service/compare/v1.1.2...v1.1.3) (2026-08-23)
 
 ### Logger
