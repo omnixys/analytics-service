@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [1.2.5](https://github.com/omnixys/analytics-service/compare/v1.2.4...v1.2.5) (2026-08-28)
+
+### Deps
+
+* **Deps:** update contracts-ts ([](https://github.com/omnixys/analytics-service/commit/1ae0cba8485fa7657a691ffe4f0c94135928eda8))
+
 ## [1.2.4](https://github.com/omnixys/analytics-service/compare/v1.2.3...v1.2.4) (2026-08-26)
 
 ### Build
