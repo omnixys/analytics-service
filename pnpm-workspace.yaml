@@ -1,7 +1,10 @@
 allowBuilds:
+  '@apollo/protobufjs': true
   '@prisma/engines': true
+  argon2: true
   esbuild: true
   prisma: true
+  protobufjs: true
 onlyBuiltDependencies:
   - '@prisma/engines'
   - esbuild
