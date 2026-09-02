@@ -266,7 +266,7 @@ export type FeatureFlagExposureWhereInput = {
   flagId?: Prisma.UuidFilter<"FeatureFlagExposure"> | string
   flagVersion?: Prisma.IntFilter<"FeatureFlagExposure"> | number
   evaluationId?: Prisma.UuidFilter<"FeatureFlagExposure"> | string
-  subjectId?: Prisma.StringFilter<"FeatureFlagExposure"> | string
+  subjectId?: Prisma.UuidFilter<"FeatureFlagExposure"> | string
   anonymousId?: Prisma.StringNullableFilter<"FeatureFlagExposure"> | string | null
   sessionId?: Prisma.StringNullableFilter<"FeatureFlagExposure"> | string | null
   variant?: Prisma.StringFilter<"FeatureFlagExposure"> | string
@@ -302,7 +302,7 @@ export type FeatureFlagExposureWhereUniqueInput = Prisma.AtLeast<{
   flagId?: Prisma.UuidFilter<"FeatureFlagExposure"> | string
   flagVersion?: Prisma.IntFilter<"FeatureFlagExposure"> | number
   evaluationId?: Prisma.UuidFilter<"FeatureFlagExposure"> | string
-  subjectId?: Prisma.StringFilter<"FeatureFlagExposure"> | string
+  subjectId?: Prisma.UuidFilter<"FeatureFlagExposure"> | string
   anonymousId?: Prisma.StringNullableFilter<"FeatureFlagExposure"> | string | null
   sessionId?: Prisma.StringNullableFilter<"FeatureFlagExposure"> | string | null
   variant?: Prisma.StringFilter<"FeatureFlagExposure"> | string
@@ -341,7 +341,7 @@ export type FeatureFlagExposureScalarWhereWithAggregatesInput = {
   flagId?: Prisma.UuidWithAggregatesFilter<"FeatureFlagExposure"> | string
   flagVersion?: Prisma.IntWithAggregatesFilter<"FeatureFlagExposure"> | number
   evaluationId?: Prisma.UuidWithAggregatesFilter<"FeatureFlagExposure"> | string
-  subjectId?: Prisma.StringWithAggregatesFilter<"FeatureFlagExposure"> | string
+  subjectId?: Prisma.UuidWithAggregatesFilter<"FeatureFlagExposure"> | string
   anonymousId?: Prisma.StringNullableWithAggregatesFilter<"FeatureFlagExposure"> | string | null
   sessionId?: Prisma.StringNullableWithAggregatesFilter<"FeatureFlagExposure"> | string | null
   variant?: Prisma.StringWithAggregatesFilter<"FeatureFlagExposure"> | string
@@ -627,7 +627,7 @@ export type FeatureFlagExposureScalarWhereInput = {
   flagId?: Prisma.UuidFilter<"FeatureFlagExposure"> | string
   flagVersion?: Prisma.IntFilter<"FeatureFlagExposure"> | number
   evaluationId?: Prisma.UuidFilter<"FeatureFlagExposure"> | string
-  subjectId?: Prisma.StringFilter<"FeatureFlagExposure"> | string
+  subjectId?: Prisma.UuidFilter<"FeatureFlagExposure"> | string
   anonymousId?: Prisma.StringNullableFilter<"FeatureFlagExposure"> | string | null
   sessionId?: Prisma.StringNullableFilter<"FeatureFlagExposure"> | string | null
   variant?: Prisma.StringFilter<"FeatureFlagExposure"> | string

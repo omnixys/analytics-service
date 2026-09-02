@@ -263,7 +263,7 @@ export type SessionWhereInput = {
   sourceId?: Prisma.UuidFilter<"Session"> | string
   environment?: Prisma.EnumEnvironmentFilter<"Session"> | $Enums.Environment
   anonymousId?: Prisma.StringNullableFilter<"Session"> | string | null
-  userId?: Prisma.StringNullableFilter<"Session"> | string | null
+  userId?: Prisma.UuidNullableFilter<"Session"> | string | null
   startedAt?: Prisma.DateTimeFilter<"Session"> | Date | string
   lastSeenAt?: Prisma.DateTimeFilter<"Session"> | Date | string
   eventCount?: Prisma.IntFilter<"Session"> | number
@@ -294,7 +294,7 @@ export type SessionWhereUniqueInput = Prisma.AtLeast<{
   sourceId?: Prisma.UuidFilter<"Session"> | string
   environment?: Prisma.EnumEnvironmentFilter<"Session"> | $Enums.Environment
   anonymousId?: Prisma.StringNullableFilter<"Session"> | string | null
-  userId?: Prisma.StringNullableFilter<"Session"> | string | null
+  userId?: Prisma.UuidNullableFilter<"Session"> | string | null
   startedAt?: Prisma.DateTimeFilter<"Session"> | Date | string
   lastSeenAt?: Prisma.DateTimeFilter<"Session"> | Date | string
   eventCount?: Prisma.IntFilter<"Session"> | number
@@ -330,7 +330,7 @@ export type SessionScalarWhereWithAggregatesInput = {
   sourceId?: Prisma.UuidWithAggregatesFilter<"Session"> | string
   environment?: Prisma.EnumEnvironmentWithAggregatesFilter<"Session"> | $Enums.Environment
   anonymousId?: Prisma.StringNullableWithAggregatesFilter<"Session"> | string | null
-  userId?: Prisma.StringNullableWithAggregatesFilter<"Session"> | string | null
+  userId?: Prisma.UuidNullableWithAggregatesFilter<"Session"> | string | null
   startedAt?: Prisma.DateTimeWithAggregatesFilter<"Session"> | Date | string
   lastSeenAt?: Prisma.DateTimeWithAggregatesFilter<"Session"> | Date | string
   eventCount?: Prisma.IntWithAggregatesFilter<"Session"> | number

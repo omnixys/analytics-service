@@ -202,7 +202,7 @@ export type AudienceMemberWhereInput = {
   audienceId?: Prisma.UuidFilter<"AudienceMember"> | string
   organizationId?: Prisma.UuidFilter<"AudienceMember"> | string
   workspaceId?: Prisma.UuidFilter<"AudienceMember"> | string
-  subjectId?: Prisma.StringFilter<"AudienceMember"> | string
+  subjectId?: Prisma.UuidFilter<"AudienceMember"> | string
   addedByRuleId?: Prisma.UuidNullableFilter<"AudienceMember"> | string | null
   createdAt?: Prisma.DateTimeFilter<"AudienceMember"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"AudienceMember"> | Date | string
@@ -230,7 +230,7 @@ export type AudienceMemberWhereUniqueInput = Prisma.AtLeast<{
   audienceId?: Prisma.UuidFilter<"AudienceMember"> | string
   organizationId?: Prisma.UuidFilter<"AudienceMember"> | string
   workspaceId?: Prisma.UuidFilter<"AudienceMember"> | string
-  subjectId?: Prisma.StringFilter<"AudienceMember"> | string
+  subjectId?: Prisma.UuidFilter<"AudienceMember"> | string
   addedByRuleId?: Prisma.UuidNullableFilter<"AudienceMember"> | string | null
   createdAt?: Prisma.DateTimeFilter<"AudienceMember"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"AudienceMember"> | Date | string
@@ -259,7 +259,7 @@ export type AudienceMemberScalarWhereWithAggregatesInput = {
   audienceId?: Prisma.UuidWithAggregatesFilter<"AudienceMember"> | string
   organizationId?: Prisma.UuidWithAggregatesFilter<"AudienceMember"> | string
   workspaceId?: Prisma.UuidWithAggregatesFilter<"AudienceMember"> | string
-  subjectId?: Prisma.StringWithAggregatesFilter<"AudienceMember"> | string
+  subjectId?: Prisma.UuidWithAggregatesFilter<"AudienceMember"> | string
   addedByRuleId?: Prisma.UuidNullableWithAggregatesFilter<"AudienceMember"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"AudienceMember"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"AudienceMember"> | Date | string
@@ -485,7 +485,7 @@ export type AudienceMemberScalarWhereInput = {
   audienceId?: Prisma.UuidFilter<"AudienceMember"> | string
   organizationId?: Prisma.UuidFilter<"AudienceMember"> | string
   workspaceId?: Prisma.UuidFilter<"AudienceMember"> | string
-  subjectId?: Prisma.StringFilter<"AudienceMember"> | string
+  subjectId?: Prisma.UuidFilter<"AudienceMember"> | string
   addedByRuleId?: Prisma.UuidNullableFilter<"AudienceMember"> | string | null
   createdAt?: Prisma.DateTimeFilter<"AudienceMember"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"AudienceMember"> | Date | string

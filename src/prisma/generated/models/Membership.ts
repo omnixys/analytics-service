@@ -201,7 +201,7 @@ export type MembershipWhereInput = {
   id?: Prisma.UuidFilter<"Membership"> | string
   organizationId?: Prisma.UuidFilter<"Membership"> | string
   workspaceId?: Prisma.UuidNullableFilter<"Membership"> | string | null
-  subjectId?: Prisma.StringFilter<"Membership"> | string
+  subjectId?: Prisma.UuidFilter<"Membership"> | string
   role?: Prisma.StringFilter<"Membership"> | string
   active?: Prisma.BoolFilter<"Membership"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
@@ -227,7 +227,7 @@ export type MembershipWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.MembershipWhereInput | Prisma.MembershipWhereInput[]
   organizationId?: Prisma.UuidFilter<"Membership"> | string
   workspaceId?: Prisma.UuidNullableFilter<"Membership"> | string | null
-  subjectId?: Prisma.StringFilter<"Membership"> | string
+  subjectId?: Prisma.UuidFilter<"Membership"> | string
   role?: Prisma.StringFilter<"Membership"> | string
   active?: Prisma.BoolFilter<"Membership"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
@@ -255,7 +255,7 @@ export type MembershipScalarWhereWithAggregatesInput = {
   id?: Prisma.UuidWithAggregatesFilter<"Membership"> | string
   organizationId?: Prisma.UuidWithAggregatesFilter<"Membership"> | string
   workspaceId?: Prisma.UuidNullableWithAggregatesFilter<"Membership"> | string | null
-  subjectId?: Prisma.StringWithAggregatesFilter<"Membership"> | string
+  subjectId?: Prisma.UuidWithAggregatesFilter<"Membership"> | string
   role?: Prisma.StringWithAggregatesFilter<"Membership"> | string
   active?: Prisma.BoolWithAggregatesFilter<"Membership"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Membership"> | Date | string

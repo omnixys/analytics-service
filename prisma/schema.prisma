@@ -103,7 +103,7 @@ model Membership {
   id             String   @id @default(uuid()) @db.Uuid
   organizationId String   @map("organization_id") @db.Uuid
   workspaceId    String?  @map("workspace_id") @db.Uuid
-  subjectId      String   @map("subject_id")
+  subjectId      String   @map("subject_id") @db.Uuid
   role           String
   active         Boolean  @default(true)
   createdAt      DateTime @default(now()) @map("created_at")
@@ -217,7 +217,7 @@ model RawEvent {
   type              String
   name              String
   anonymousId       String?     @map("anonymous_id")
-  userId            String?     @map("user_id")
+  userId            String?     @map("user_id") @db.Uuid
   groupId           String?     @map("group_id")
   sessionId         String?     @map("session_id")
   properties        Json
@@ -307,10 +307,10 @@ model Session {
   organizationId String      @map("organization_id") @db.Uuid
   workspaceId    String      @map("workspace_id") @db.Uuid
   sourceId       String      @map("source_id") @db.Uuid
-  environment    Environment
-  anonymousId    String?     @map("anonymous_id")
-  userId         String?     @map("user_id")
-  startedAt      DateTime    @map("started_at")
+environment    Environment
+    anonymousId    String?     @map("anonymous_id")
+    userId         String?     @map("user_id") @db.Uuid
+    startedAt      DateTime    @map("started_at")
   lastSeenAt     DateTime    @map("last_seen_at")
   eventCount     Int         @default(0) @map("event_count")
   durationMs     BigInt      @default(0) @map("duration_ms")
@@ -652,7 +652,7 @@ model AudienceMember {
   audienceId     String   @map("audience_id") @db.Uuid
   organizationId String   @map("organization_id") @db.Uuid
   workspaceId    String   @map("workspace_id") @db.Uuid
-  subjectId      String   @map("subject_id")
+  subjectId      String   @map("subject_id") @db.Uuid
   addedByRuleId  String?  @map("added_by_rule_id") @db.Uuid
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
@@ -1012,7 +1012,7 @@ model FeatureFlagExposure {
   flagId         String   @map("flag_id") @db.Uuid
   flagVersion    Int      @map("flag_version")
   evaluationId   String   @map("evaluation_id") @db.Uuid
-  subjectId      String   @map("subject_id")
+  subjectId      String   @map("subject_id") @db.Uuid
   anonymousId    String?  @map("anonymous_id")
   sessionId      String?  @map("session_id")
   variant        String
@@ -1047,7 +1047,7 @@ model AuditEntry {
   id             String   @id @default(uuid()) @db.Uuid
   organizationId String   @map("organization_id") @db.Uuid
   workspaceId    String?  @map("workspace_id") @db.Uuid
-  actorId        String   @map("actor_id")
+  actorId        String   @map("actor_id") @db.Uuid
   action         String
   resourceType   String   @map("resource_type")
   resourceId     String   @map("resource_id")
