@@ -307,10 +307,10 @@ model Session {
   organizationId String      @map("organization_id") @db.Uuid
   workspaceId    String      @map("workspace_id") @db.Uuid
   sourceId       String      @map("source_id") @db.Uuid
-environment    Environment
-    anonymousId    String?     @map("anonymous_id")
-    userId         String?     @map("user_id") @db.Uuid
-    startedAt      DateTime    @map("started_at")
+  environment    Environment
+  anonymousId    String?     @map("anonymous_id")
+  userId         String?     @map("user_id") @db.Uuid
+  startedAt      DateTime    @map("started_at")
   lastSeenAt     DateTime    @map("last_seen_at")
   eventCount     Int         @default(0) @map("event_count")
   durationMs     BigInt      @default(0) @map("duration_ms")
