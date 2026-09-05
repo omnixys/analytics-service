@@ -35,7 +35,7 @@ export class SchedulerWorker
       await this.runtime.tick(this.workerId);
     } catch (error) {
       this.logger.error(
-        "Scheduler polling failed",
+        "Scheduler polling failed: %o",
         error instanceof Error ? error.stack : undefined,
       );
     } finally {

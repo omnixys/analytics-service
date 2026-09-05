@@ -9,7 +9,7 @@
 
 - Kind: Service
 - Package: `analytics-service` (version: 1.1.0)
-- Runtime: Node >=25.8.2 (pnpm >=10.33.0)
+- Runtime: Node >=26.8.1 (pnpm >=11.24.0)
 - Description: Omnixys Analytics Service – event analytics, feature flags, replay and scheduling.
 - Architecture: src/adapter, analytics-engine, api-key, catalog, config, domain-ingestion, feature-flags, graphql, health, ingestion, lineage, processing, replay, scheduler, search
 - Database: PostgreSQL via Prisma (prisma/schema.prisma); Migrations: Prisma Migrate (prisma:migrate / generate / validate)

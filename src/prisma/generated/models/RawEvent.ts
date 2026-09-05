@@ -295,7 +295,7 @@ export type RawEventWhereInput = {
   type?: Prisma.StringFilter<"RawEvent"> | string
   name?: Prisma.StringFilter<"RawEvent"> | string
   anonymousId?: Prisma.StringNullableFilter<"RawEvent"> | string | null
-  userId?: Prisma.StringNullableFilter<"RawEvent"> | string | null
+  userId?: Prisma.UuidNullableFilter<"RawEvent"> | string | null
   groupId?: Prisma.StringNullableFilter<"RawEvent"> | string | null
   sessionId?: Prisma.StringNullableFilter<"RawEvent"> | string | null
   properties?: Prisma.JsonFilter<"RawEvent">
@@ -350,7 +350,7 @@ export type RawEventWhereUniqueInput = Prisma.AtLeast<{
   type?: Prisma.StringFilter<"RawEvent"> | string
   name?: Prisma.StringFilter<"RawEvent"> | string
   anonymousId?: Prisma.StringNullableFilter<"RawEvent"> | string | null
-  userId?: Prisma.StringNullableFilter<"RawEvent"> | string | null
+  userId?: Prisma.UuidNullableFilter<"RawEvent"> | string | null
   groupId?: Prisma.StringNullableFilter<"RawEvent"> | string | null
   sessionId?: Prisma.StringNullableFilter<"RawEvent"> | string | null
   properties?: Prisma.JsonFilter<"RawEvent">
@@ -406,7 +406,7 @@ export type RawEventScalarWhereWithAggregatesInput = {
   type?: Prisma.StringWithAggregatesFilter<"RawEvent"> | string
   name?: Prisma.StringWithAggregatesFilter<"RawEvent"> | string
   anonymousId?: Prisma.StringNullableWithAggregatesFilter<"RawEvent"> | string | null
-  userId?: Prisma.StringNullableWithAggregatesFilter<"RawEvent"> | string | null
+  userId?: Prisma.UuidNullableWithAggregatesFilter<"RawEvent"> | string | null
   groupId?: Prisma.StringNullableWithAggregatesFilter<"RawEvent"> | string | null
   sessionId?: Prisma.StringNullableWithAggregatesFilter<"RawEvent"> | string | null
   properties?: Prisma.JsonWithAggregatesFilter<"RawEvent">

@@ -228,7 +228,7 @@ export type AuditEntryWhereInput = {
   id?: Prisma.UuidFilter<"AuditEntry"> | string
   organizationId?: Prisma.UuidFilter<"AuditEntry"> | string
   workspaceId?: Prisma.UuidNullableFilter<"AuditEntry"> | string | null
-  actorId?: Prisma.StringFilter<"AuditEntry"> | string
+  actorId?: Prisma.UuidFilter<"AuditEntry"> | string
   action?: Prisma.StringFilter<"AuditEntry"> | string
   resourceType?: Prisma.StringFilter<"AuditEntry"> | string
   resourceId?: Prisma.StringFilter<"AuditEntry"> | string
@@ -263,7 +263,7 @@ export type AuditEntryWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.AuditEntryWhereInput | Prisma.AuditEntryWhereInput[]
   organizationId?: Prisma.UuidFilter<"AuditEntry"> | string
   workspaceId?: Prisma.UuidNullableFilter<"AuditEntry"> | string | null
-  actorId?: Prisma.StringFilter<"AuditEntry"> | string
+  actorId?: Prisma.UuidFilter<"AuditEntry"> | string
   action?: Prisma.StringFilter<"AuditEntry"> | string
   resourceType?: Prisma.StringFilter<"AuditEntry"> | string
   resourceId?: Prisma.StringFilter<"AuditEntry"> | string
@@ -301,7 +301,7 @@ export type AuditEntryScalarWhereWithAggregatesInput = {
   id?: Prisma.UuidWithAggregatesFilter<"AuditEntry"> | string
   organizationId?: Prisma.UuidWithAggregatesFilter<"AuditEntry"> | string
   workspaceId?: Prisma.UuidNullableWithAggregatesFilter<"AuditEntry"> | string | null
-  actorId?: Prisma.StringWithAggregatesFilter<"AuditEntry"> | string
+  actorId?: Prisma.UuidWithAggregatesFilter<"AuditEntry"> | string
   action?: Prisma.StringWithAggregatesFilter<"AuditEntry"> | string
   resourceType?: Prisma.StringWithAggregatesFilter<"AuditEntry"> | string
   resourceId?: Prisma.StringWithAggregatesFilter<"AuditEntry"> | string
