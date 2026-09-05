@@ -3,6 +3,35 @@
 All notable changes in this project will be documented in this file.
 
 
+## [2.0.0](https://github.com/omnixys/analytics-service/compare/v1.2.5...v2.0.0) (2026-09-05)
+
+### Analytics
+
+* **Analytics:** rewire omnixys service deps to file: ([](https://github.com/omnixys/analytics-service/commit/12989a0081a6f7fb584edc11752f682ddae8343d))
+* **Analytics:** type identity reference fields as UUID ([](https://github.com/omnixys/analytics-service/commit/ff5aad005ac18786cffc185c3483a74a717cb5f4))
+* **Analytics:** accept UUIDv7 in id patterns ([](https://github.com/omnixys/analytics-service/commit/1a9f9533e6b039bf6ccf801c4f41781e7500ed05))
+
+### Deps
+
+* **Deps:** update omnixys deps ([](https://github.com/omnixys/analytics-service/commit/851920ecd4f7732200a337a1741cdddabdb56fc6))
+
+### Identity
+
+* **Identity:** document U/K identity conventions in AGENTS.md ([](https://github.com/omnixys/analytics-service/commit/2bc5460174ae46066a1985317dd8c29b72e4e5fc))
+
+### Logging
+
+* **Logging:** add service:analytics provenance source to logger acquisitions ([](https://github.com/omnixys/analytics-service/commit/21673e9ecc14bf0b2389d811e88e0c39c436c060))
+* **Logging:** add missing format placeholders to structured log calls ([](https://github.com/omnixys/analytics-service/commit/b9e0c1aa8535d40d37d0ca589c4bb161789db615))
+
+### Other
+
+* **Other:** Merge pull request #1 from omnixys/migration/uuid-v7 ([](https://github.com/omnixys/analytics-service/commit/b8e27de026da97fa86d4ca0a553291b06c1e549f)), closes [#1](https://github.com/omnixys/analytics-service/issues/1)
+
+### Runtime
+
+* **Runtime:** require node 26.8.1 and pnpm 11.24.0 ([](https://github.com/omnixys/analytics-service/commit/1bf215305e5ef35719704c12e609d95514c90129))
+
 ## [1.2.5](https://github.com/omnixys/analytics-service/compare/v1.2.4...v1.2.5) (2026-08-28)
 
 ### Deps
