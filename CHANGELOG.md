@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [2.0.1](https://github.com/omnixys/analytics-service/compare/v2.0.0...v2.0.1) (2026-09-10)
+
+### Deps
+
+* **Deps:** update graphql-ts ([](https://github.com/omnixys/analytics-service/commit/b0952bf18832daca3177b96419960c72b26b9f04))
+
 ## [2.0.0](https://github.com/omnixys/analytics-service/compare/v1.2.5...v2.0.0) (2026-09-05)
 
 ### Analytics
