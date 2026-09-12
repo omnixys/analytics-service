@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [2.0.3](https://github.com/omnixys/analytics-service/compare/v2.0.2...v2.0.3) (2026-09-12)
+
+### Analytics
+
+* **Analytics:** bump omnixys packages to 4.4.0 ([](https://github.com/omnixys/analytics-service/commit/df44ac200575c2a2ee10bb1b2e5e781f943449e0))
+
 ## [2.0.2](https://github.com/omnixys/analytics-service/compare/v2.0.1...v2.0.2) (2026-09-11)
 
 ### Deps
