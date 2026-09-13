@@ -1,6 +1,6 @@
 {
   "name": "analytics-service",
-  "version": "1.2.4",
+  "version": "2.0.3",
   "description": "Omnixys Analytics & Insights Platform",
   "author": {
     "name": "Caleb Gyamfi",
@@ -18,10 +18,10 @@
   "license": "GPL-3.0-or-later",
   "type": "module",
   "private": false,
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@11.24.0",
   "engines": {
-    "node": ">=24.10.0",
-    "pnpm": ">=10.33.0"
+    "node": ">=26.8.1 <27",
+    "pnpm": ">=11.24.0"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -73,7 +73,7 @@
     "@nestjs/graphql": "^13.4.5",
     "@nestjs/platform-fastify": "^11.2.3",
     "@omnixys/analytics-rule-engine": "file:../../packages/ts/analytics-rule-engine",
-        "@omnixys/cache-ts": "file:../../packages/ts/cache",
+    "@omnixys/cache-ts": "file:../../packages/ts/cache",
     "@omnixys/context-ts": "file:../../packages/ts/context",
     "@omnixys/contracts-ts": "file:../../packages/ts/contracts",
     "@omnixys/graphql-ts": "file:../../packages/ts/graphql",
@@ -84,8 +84,8 @@
     "@omnixys/observability-ts": "file:../../packages/ts/observability",
     "@omnixys/security-ts": "file:../../packages/ts/security",
     "@opentelemetry/api": "^1.9.1",
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
     "cfonts": "^3.3.1",
     "chalk": "^6.0.0",
     "class-transformer": "^0.5.1",
@@ -110,25 +110,20 @@
     "@semantic-release/npm": "^13.1.5",
     "@semantic-release/release-notes-generator": "^14.1.1",
     "@tsconfig/node23": "^23.0.5",
-    "@types/node": "^22.20.1",
+    "@types/node": "^22.20.2",
     "@types/pg": "^8.23.1",
-    "eslint": "^10.9.0",
+    "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
-    "globals": "^17.11.0",
+    "globals": "^17.12.0",
     "prettier": "^3.9.6",
     "prettier-plugin-organize-imports": "^4.3.0",
     "prettier-plugin-sort-imports": "^1.8.11",
-    "prisma": "^7.9.1",
+    "prisma": "^7.10.0",
     "semantic-release": "^25.0.9",
-    "tsx": "^4.23.12",
+    "tsx": "^4.23.13",
     "typedoc": "^0.28.20",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.67.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "fastify": "5.8.5"
-    }
+    "typescript-eslint": "^8.70.0"
   }
 }
