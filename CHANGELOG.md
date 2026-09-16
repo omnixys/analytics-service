@@ -3,6 +3,12 @@
 All notable changes in this project will be documented in this file.
 
 
+## [2.0.5](https://github.com/omnixys/analytics-service/compare/v2.0.4...v2.0.5) (2026-09-16)
+
+### Deps
+
+* **Deps:** update omnixys logger-ts package ([](https://github.com/omnixys/analytics-service/commit/c4fce921459c9561cb9d4d4f2335bc67f4f8c720))
+
 ## [2.0.4](https://github.com/omnixys/analytics-service/compare/v2.0.3...v2.0.4) (2026-09-13)
 
 ### Deps
